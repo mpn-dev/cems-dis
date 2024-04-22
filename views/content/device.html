@@ -25,7 +25,6 @@
           <table class="normal full highlight-row">
             <tr>
               <th>UID</th>
-              <th>DIS</th>
               <th>Nama</th>
               <th>Latitude</th>
               <th>Longitude</th>
@@ -37,7 +36,6 @@
             </tr>
             <tr style="background-color: {{deviceRowColor(h)}};" ng-repeat="h in devices">
               <td>{{h.uid}}</td>
-              <td>{{h.dis.name}}</td>
               <td>{{h.name}}</td>
               <td>{{h.latitude}}</td>
               <td>{{h.longitude}}</td>
@@ -270,7 +268,6 @@
             $scope.clkSave = function() {
               var params = {
                 uid:        $scope.device.uid, 
-                dis_id:     $scope.device.dis_id, 
                 name:       $scope.device.name, 
                 latitude:   $scope.device.latitude ? parseFloat($scope.device.latitude) : null, 
                 longitude:  $scope.device.longitude ? parseFloat($scope.device.longitude) : null, 
