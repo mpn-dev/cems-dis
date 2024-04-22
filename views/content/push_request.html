@@ -1,0 +1,132 @@
+<% template "admin.html" . %>
+<% define "title" %>Push Request<% end %>
+<% define "content" %>
+        <div class="row justify-content-between pb-2">
+          <div class="col-12 col-lg-3">
+            <div class="title1a text-nowrap"><% .title %></div>
+          </div>
+          <div class="col-12 col-lg-9 pr-1">
+            <div class="row justify-content-start justify-content-lg-end mx-0">
+              <div class="d-flex" style="width: 185px; margin-top: 2px;">
+                <label class="pt-1" style="width: 50px;">Mulai</label>
+                <input class="mx-0" id="push-date-start" width="124" value="<% .date_min %>"/>
+              </div>
+              <div class="d-flex" style="width: 185px; margin-top: 2px;">
+                <label class="pt-1" style="width: 50px;">Sampai</label>
+                <input class="mx-0" id="push-date-end" width="124" value="<% .date_max %>" />
+              </div>
+              <div style="width: 220px;">
+                <div class="input-group float-md-right pt-1" style="width: 218px;">
+                  <form>
+                    <input type="text" class="input-sm" ng-model="searchKeywords" ng-change="resetPage()" placeholder="Search keywords"></input>
+                    <div class="btn-group float-right">
+                      <button type="submit" class="btn btn-sm btn-outline" ng-click="loadPushRequests()"><i class="fa fa-refresh" title="Refresh"></i></button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row" ng-show="isBusy">
+          <div class="col-12">
+            <div class="spinner-border text-primary" style="position: absolute; top: 220px; left: 50%; width: 50px; height: 50px;"></div>
+          </div>
+        </div>
+
+        <table class="normal full highlight-row" border="1">
+        <tr>
+          <th>ID</th>
+          <th width="140px">Tanggal</th>
+          <th style="min-width: 105px;">Status</th>
+          <th style="min-width: 60px;">Log ID</th>
+          <th>Parameter</th>
+          <th>Action</th>
+        </tr>
+        <tr ng-repeat="r in logs.push_requests track by $index">
+          <td>{{r.id}}</td>
+          <td>{{r.datetime}}</td>
+          <td>{{r.status}}</td>
+          <td>{{r.log_id}}</td>
+          <td style="word-wrap: break-word; word-break: break-all;">{{r.parameter}}</td>
+          <td>
+            <a href="#" ng-click="clkPushRequestItem($index)">Detail</a>
+          </td>
+        </tr>
+        </table>
+
+        <div class="row table-footer justify-content-between">
+          <div class="col"><div id="push-request-paging"></div></div>
+          <div class="col align-right text-nowrap">{{cntShown}} / {{cntLogs}}</div>
+        </div>
+
+        <div id="message-box"></div>
+
+
+        <script>
+          mainApp.controller('wmCtrl', function($scope, $http, $q) {
+            var pushDateStart = $('#push-date-start').datepicker({uiLibrary: 'bootstrap4', size: 'small', format: 'yyyy-mm-dd'});
+            var pushDateEnd = $('#push-date-end').datepicker({uiLibrary: 'bootstrap4', size: 'small', format: 'yyyy-mm-dd'});
+
+            $scope.resetPage = function() {
+              if("page" in $scope.logs) {
+                $scope.logs.page = 1;
+              }
+            }
+
+            $scope.loadPushRequests = function() {
+              if($scope.logs && ("page" in $scope.logs)) {
+                var range = getDateRange(pushDateStart, pushDateEnd, "Tanggal awal", "Tanggal akhir", true);
+                if(range instanceof Error) {
+                  window.alert(range.message);
+                  return;
+                }
+
+                var keywords = $scope.searchKeywords ? $scope.searchKeywords : "";
+                var timeRange = range != null ? "&ts1=" + range.start + "&ts2=" + range.end : ""
+                var url = "/api/v1/push_request?page=" + $scope.logs.page + timeRange + "&q=" + keywords;
+                $scope.isBusy = true;
+                $http.get(url, requestConfig()).then(
+                  function(response) {
+                    $scope.logs = response.data.data;
+                    $scope.cntShown = Object.keys($scope.logs.push_requests).length;
+                    $scope.cntLogs = $scope.logs.rows;
+                    $scope.isBusy = false;
+                    paging(document.getElementById("push-request-paging"), $scope.logs.page, $scope.logs.pages, 7, $scope.clkPushRequestPage, defaultPagingOptions());
+                  }
+                )
+              }
+            }
+
+            $scope.clkPushRequestItem = function(index) {
+              var item = $scope.logs.push_requests[index];
+              var tableRows = [
+                '<tr><td>ID</td><td>' + item.id + '</td></tr>', 
+                '<tr><td>Tanggal</td><td>' + item.datetime + '</td></tr>', 
+                '<tr><td>HWID</td><td>' + item.kd_hardware + '</td></tr>', 
+                '<tr><td>Log ID</td><td>' + item.log_id + '</td></tr>', 
+                '<tr><td>Sender</td><td>' + item.sender + '</td></tr>', 
+                '<tr><td>IP Address</td><td>' + item.created_by + '</td></tr>', 
+                '<tr><td>Parameter</td><td style="word-wrap: break-word; word-break: break-all;">' + item.parameter + '</td></tr>', 
+                '<tr><td>Status</td><td>' + item.status + '</td></tr>', 
+                '<tr><td>Comment</td><td>' + (item.comment ? item.comment : '') + '</td></tr>', 
+              ];
+              var message = '<table border="1" style="width: auto;">' + tableRows.join('') + '</table>';
+              msgbox("message-box", "Push Request #" + item.id, message, {class: "modal-lg"});
+            }
+
+            $scope.clkPushRequestPage = function(page) {
+              $scope.logs.page = page;
+              $scope.loadPushRequests();
+            }
+
+            $scope.clkRefresh = function() {
+              $scope.loadPushRequests();
+            }
+
+            $scope.logs = {page: 1};
+            $scope.loadPushRequests();
+          });
+        </script>
+<% end %>

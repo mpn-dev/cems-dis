@@ -1,0 +1,408 @@
+<% template "admin.html" . %>
+<% define "title" %>Raw Data<% end %>
+<% define "content" %>
+        <span ng-show="ftab == 'list' || ftab == 'export'" class="ng-cloak">
+          <div class="title1a">{{titles[ftab]}}</div>
+          <div class="row justify-content-between">
+            <div class="col-md-12 col-xl-6 title2">
+              {{dev_info}}
+            </div>
+            <div class="col-md-12 col-xl-6 py-3" ng-show="ftab == 'list'">
+              <div class="row justify-content-start justify-content-xl-end mx-0">
+                <div class="d-flex" style="width: 185px;">
+                  <label class="pt-1" style="width: 50px;">Mulai</label>
+                  <input class="mx-0" id="record-date-start" width="124" value="{{date1}}" />
+                </div>
+                <div class="d-flex" style="width: 185px;">
+                  <label class="pt-1" style="width: 50px;">Sampai</label>
+                  <input class="mx-0" id="record-date-end" width="124" value="{{date2}}"/>
+                </div>
+                <div style="width: 267px;">
+                  <div class="btn-group">
+                    <button class="btn btn-primary btn-sm" style="margin: 2px 2px 0 0;" ng-click="clkRefresh()">Refresh</button>
+                    <button class="btn btn-primary btn-sm" style="margin: 2px 2px 0 2px;" ng-click="clkExport()">Export Excel</button>
+                    <button class="btn btn-primary btn-sm" style="margin: 2px 0 0 2px;" ng-show="preloadHwid == null" ng-click="clkDeviceSelectDialog()">Pilih Device</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div ng-show="ftab == 'list'">
+            <div class="row">
+              <div class="col">
+                <div class="btn-group w-100">
+                  <button class="btn btn-sm btn-primary" ng-class="{'active': selectedMode != 'table'}" ng-click="clkMode('table')">Table</button>
+                  <button class="btn btn-sm btn-primary ml-1" ng-class="{'active': selectedMode != 'chart'}" ng-click="clkMode('chart')">Chart</button>
+                </div>
+              </div>
+            </div>
+            <div class="row mt-2 mb-4" ng-show="(selectedMode == 'chart') && (chartData.records.length > 0)">
+              <div class="col-12">
+                <ul class="ml-3">
+                  <li>Chart hanya menampilkan maks. {{CHART_MAX_ROWS}} data</li>
+                </ul>
+              </div>
+            </div>
+            <div class="row" ng-show="isBusy">
+              <div class="col-12">
+                <div class="spinner-border text-primary" style="position: absolute; top: 220px; left: 50%; width: 50px; height: 50px;"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-5" ng-show="ftab == 'export'">
+            <table class="form">
+              <tr>
+                <td width="140px">Tanggal Awal</td>
+                <td width="160px"><input id="export-date-start" width="130" /></td>
+              </tr>
+              <tr>
+                <td>Tanggal Akhir</td>
+                <td><input id="export-date-end" width="130" /></td>
+              </tr>
+            </table>
+            <hr>
+            <button class="btn btn-sm btn-primary" ng-click="selectExportRange()">Export</button>
+            <button class="btn btn-sm btn-primary" ng-click="clkBack()">Kembali</button>
+          </div>
+
+          <div class="mt-4" ng-show="ftab == 'list'">
+            <span ng-show="(selectedMode == 'table') && (tableData.records.length > 0)">
+              <table class="normal full highlight-row" >
+                <tr>
+                  <th>Tanggal</th>
+                  <th style="text-align: center" ng-repeat="s in sensors">{{s.name}}{{s.unit ? " (" + s.unit + ")" : ""}}</th>
+                </tr>
+                <tr ng-repeat="r in tableData.records">
+                  <td>{{epochToDate(r.timestamp)}}</td>
+                  <td style="text-align: center" ng-repeat="s in sensors">{{r[s.code]}}</td>
+                </tr>
+              </table>
+            
+              <div class="row table-footer justify-content-between">
+                <div class="col"><div id="logs-paging"></div></div>
+                <div class="col align-right text-nowrap">{{cntShownRecords}} / {{cntTotalRecords}}</div>
+              </div>
+            </span>
+
+            <div class="row mx-1 p-3 bg-light-gray" ng-show="(selectedMode == 'chart') && (chartData.records.length > 0)">
+              <div class="col-lg-6 pb-3 chart-canvas chart-canvas-lg" ng-repeat="x in [].constructor(20) track by $index" ng-show="charts[$index]">
+                <canvas id="chart-{{$index + 1}}"></canvas>
+              </div>
+            </div>
+
+            <span ng-show="(tableData.records.length == 0) && (chartData.records.length == 0)">
+              Tidak ada data untuk range waktu tersebut
+            </span>
+          </div>
+        </span>
+
+        <span ng-show="ftab == 'pick'">
+          <div class="row justify-content-between pb-2">
+            <div class="col col-sm-6">
+              <div class="title1a text-nowrap">{{titles[ftab]}}</div>
+            </div>
+            <div class="col pr-1">
+              <form>
+                <div class="input-group pt-1 float-md-right" style="width: 218px;">
+                  <input type="text" class="input-sm" ng-model="searchKeywords" ng-change="resetDevicePage()" placeholder="Search keywords"></input>
+                  <div class="btn-group float-right">
+                    <button type="submit" class="btn btn-sm btn-outline" ng-click="loadDevices()"><i class="fa fa-refresh" title="Refresh"></i></button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <table class="normal full highlight-row">
+            <tr>
+              <th>UID</th>
+              <th>DIS</th>
+              <th>Nama</th>
+              <th>Latitude</th>
+              <th>Longitude</th>
+              <th>API Key</th>
+              <th>Secret</th>
+              <th>Created</th>
+              <th>Updated</th>
+            </tr>
+            <tr ng-repeat="d in devices" ng-show="d.enabled > 0" ng-click="clkSelectDevice(d.id)" style="cursor: pointer;">
+              <td>{{d.uid}}</td>
+              <td>{{d.dis.name}}</td>
+              <td>{{d.name}}</td>
+              <td>{{d.latitude}}</td>
+              <td>{{d.longitude}}</td>
+              <td>{{d.apikey}}</td>
+              <td>{{d.secret}}</td>
+              <td>{{d.created_at}}</td>
+              <td>{{d.updated_at}}</td>
+            </tr>
+          </table>
+          
+          <div class="row table-footer justify-content-between">
+            <div class="col"><div id="devices-paging"></div></div>
+            <div class="col align-right text-nowrap">{{cntShownDevices}} / {{cntTotalDevices}}</div>
+          </div>
+        </span>
+
+
+        <script>
+          mainApp.controller('wmCtrl', function($scope, $http, $q) {
+            const CHART_MAX_ROWS = 720;
+            $scope.CHART_MAX_ROWS = CHART_MAX_ROWS;
+
+            $scope.titles = {
+              "list":   "Raw Data", 
+              "pick":   "Raw Data > Pilih Device", 
+              "export": "Raw Data > Export Excel", 
+            }
+
+            $scope.sensors = [
+              {code: "so2",         name: "SO2",          unit: ""}, 
+              {code: "nox",         name: "NOX",          unit: ""}, 
+              {code: "pm",          name: "PM",           unit: ""}, 
+              {code: "h2s",         name: "H2S",          unit: ""}, 
+              {code: "opacity",     name: "Opacity",      unit: ""}, 
+              {code: "flow",        name: "Flow",         unit: ""}, 
+              {code: "o2",          name: "O2",           unit: ""}, 
+              {code: "temperature", name: "Temperature",  unit: ""}, 
+              {code: "pressure",    name: "Pressure",     unit: ""}, 
+            ];
+            $scope.tableData = {records: [], page: 1, pages: 1, rows: 20};
+            $scope.chartData = {records: []};
+            $scope.charts = [];
+            $scope.device = {};
+            $scope.devicePage = 1;
+            $scope.selectedMode = "table";
+            $scope.preloadDeviceId = <% .preload_device_id %>;
+
+            var record_date_start = $('#record-date-start').datepicker({uiLibrary: 'bootstrap4', size: 'small', format: 'yyyy-mm-dd'});
+            var record_date_end = $('#record-date-end').datepicker({uiLibrary: 'bootstrap4', size: 'small', format: 'yyyy-mm-dd'});
+            var export_date_start = $('#export-date-start').datepicker({uiLibrary: 'bootstrap4', size: 'small', format: 'yyyy-mm-dd'});
+            var export_date_end = $('#export-date-end').datepicker({uiLibrary: 'bootstrap4', size: 'small', format: 'yyyy-mm-dd'});
+
+            var initDate = (new Date()).toISOString().substring(0, 10);
+            record_date_start.value(initDate);
+            record_date_end.value(initDate);
+            export_date_start.value(initDate);
+            export_date_end.value(initDate);
+
+            $scope.alertError = function(resp) {
+              $scope.isBusy = false;
+              defaultErrorHandler(resp);
+            }
+
+            $scope.joinFields = function(obj, fields, char) {
+              return fields
+                .map(function(f){return obj[f];})
+                .filter(function(o){return o;})
+                .join(char);
+            }
+
+            $scope.epochToDate = function(epoch) {
+              return (new Date(epoch * 1000)).toISOString().replace('T', ' ').substring(0, 19);
+            }
+
+            $scope.resetDevicePage = function() {
+              $scope.devicePage = 1;
+            }
+
+            $scope.selectExportRange = function() {
+              var range = getDateRange(export_date_start, export_date_end, "Tanggal Awal", "Tanggal Akhir");
+              if(range instanceof Error) {
+                window.alert(range.message);
+                return;
+              }
+
+              var url = "/res/device_logs/" + $scope.device.kd_hardware + "/download?ts1=" + range.start + "&ts2=" + range.end + "&token=" + getCsrfToken();
+              window.open(url, "_blank");
+            }
+
+            $scope.updateChart = function() {
+              var lineColors = chartLineColors();
+              var labels = $scope.chartData.records.map(function(r) {return $scope.epochToDate(r.timestamp).substring(8, 16);}).reverse();
+
+              for(var i = 0; i < $scope.sensors.length; i++) {
+                var ss = $scope.sensors[i];
+                var ds = $scope.chartData.records.map(function(r) {return r[ss.code];}).reverse();
+                var cv = document.getElementById("chart-" + (i + 1));
+                cv.style.backgroundColor = "#ffffff";
+
+                if($scope.charts[i]) {
+                  $scope.charts[i].destroy();
+                }
+
+                $scope.charts[i] = new Chart(cv, {
+                  type: 'line',
+                  data: {
+                    labels: labels,
+                    datasets: [{
+                      label:        ss.name + (ss.unit ? " (" + ss.unit + ")" : ""),
+                      data:         ds,
+                      borderWidth:  1, 
+                      borderColor:  lineColors[i],
+                      tension:      0.1, 
+                      fill:         true, 
+                      pointStyle:   false, 
+                    }], 
+                  },
+                  options: {
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    scales: {y: {beginAtZero: true}}, 
+                    layout: {padding: 20}, 
+                    plugins: {
+                      customCanvasBackgroundColor: {
+                        color: 'lightGreen',
+                      }, 
+                      legend: {
+                        display: true, 
+                        labels: {
+                          boxWidth: 10, 
+                          boxHeight: 2, 
+                          font: {
+                            size: 15, 
+                          }, 
+                          color: "#000000", 
+                        }
+                      }
+                    }
+                  }
+                });
+              }
+            }
+
+            $scope.loadDevices = function() {
+              var page = $scope.devicePage ? $scope.devicePage : 1;
+              var keywords = $scope.searchKeywords ? $scope.searchKeywords : "";
+              $http.get("/api/v1/devices?page=" + page + "&q=" + keywords, requestConfig()).then(
+                function(response) {
+                  $scope.devices = response.data.data;
+                  $scope.cntShownDevices = $scope.devices.length;
+                  $scope.cntTotalDevices = response.data.rows;
+                  paging(document.getElementById("devices-paging"), $scope.devicePage, $scope.devices.pages, 7, $scope.clkDevicePage, defaultPagingOptions());
+                }
+              );
+            }
+
+            $scope.presentData = function() {
+              $scope.ftab = "list";
+              $scope.tableData = {records: [], page: 1, pages: 1, rows: 20};
+              $scope.chartData = {records: []};
+
+              var options = [];
+              var range = getDateRange(record_date_start, record_date_end, "Tanggal awal", "Tanggal akhir", true);
+
+              if(range instanceof Error) {
+                window.alert(range.message);
+                return;
+              }
+
+              if (range != null) {
+                options.push("ts1=" + range.start);
+                options.push("ts2=" + range.end);
+              }
+
+              if($scope.selectedMode == "table") {
+                var page = "page" in $scope.tableData ? $scope.tableData.page : 1;
+                options.push("page=" + page);
+                var receive = function(response) {
+                  $scope.tableData = {
+                    records:  response.data.data, 
+                    page:     response.data.page, 
+                    pages:    response.data.pages, 
+                    rows:     response.data.rows, 
+                  }
+                  $scope.cntShownRecords = $scope.tableData.records.length;
+                  $scope.cntTotalRecords = $scope.tableData.rows;
+                  paging(document.getElementById("logs-paging"), $scope.tableData.page, $scope.tableData.pages, 7, $scope.clkLogsPage, defaultPagingOptions());
+                }
+              }
+
+              if($scope.selectedMode == "chart") {
+                options.push("size=" + CHART_MAX_ROWS);
+                var receive = function(response) {
+                  $scope.chartData.records = response.data.data;
+                  $scope.updateChart();
+                }
+              }
+
+              var url = "/api/v1/devices/" + $scope.device.id + "/raw-data?" + options.join("&");
+              $scope.isBusy = true;
+              $http.get(url, requestConfig()).then(
+                function(response) {
+                  receive(response);
+                  $scope.isBusy = false;
+                }, 
+                function(response) {
+                  $scope.isBusy = false;
+                  $scope.alertError(response);
+                }
+              );
+            }
+
+            $scope.clkDeviceSelectDialog = function() {
+              $scope.ftab = "pick";
+            }
+
+            $scope.clkSelectDevice = function(id) {
+              $http.get("/api/v1/devices/" + id, requestConfig()).then(
+                function(response) {
+                  $scope.device = response.data.data;
+                  $scope.dev_info = $scope.joinFields(
+                    $scope.device, 
+                    ["uid", "name"], 
+                    " - "
+                  );
+
+                  var time1 = Date.now() - (Date.now() % (24 * 60 * 60 * 1000));
+                  var time2 = time1 + (((24 * 60 * 60) - 1) * 1000);
+                  var options = {timeZone: "UTC", hour: "numeric", minute: "numeric", second: "numeric", hour12: false};
+                  $scope.startTimeLocal = new Intl.DateTimeFormat("en-GB", options).format(time1);
+                  $scope.endTimeLocal = new Intl.DateTimeFormat("en-GB", options).format(time2);
+                  $scope.presentData();
+                }
+              )
+            };
+
+            $scope.clkRefresh = function() {
+              $scope.presentData();
+            }
+
+            $scope.clkExport = function() {
+              $scope.ftab = "export";
+            }
+
+            $scope.clkBack = function() {
+              $scope.ftab = "list";
+            }
+
+            $scope.clkMode = function(mode) {
+              $scope.selectedMode = mode;
+              $scope.presentData();
+            }
+
+            $scope.clkDevicePage = function(page) {
+              $scope.devicePage = page;
+              $scope.loadDevices();
+            }
+
+            $scope.clkLogsPage = function(page) {
+              $scope.tableData.page = page;
+              $scope.presentData();
+            }
+
+            $scope.loadDevices();
+
+            for(var i = 0; i < 20; i++) {
+              $scope.charts.push(null);
+            }
+
+            if($scope.preloadHwid) {
+              $scope.clkSelectDevice($scope.preloadDeviceId);
+            } else {
+              $scope.ftab = "pick";
+            }
+          });
+        </script>
+<% end %>

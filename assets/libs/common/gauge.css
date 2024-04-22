@@ -1,0 +1,90 @@
+.gauge-container {
+  position: relative;
+  width: 190px;
+  height: 190px;
+  top: 5px;
+  left: 6px;
+  display: block;
+  float: left;
+  padding: 0px;
+  margin: 0px;
+}
+
+.gauge-container > .label {
+  display: inline-block;
+  top: 0px;
+  left: 0px;
+  width: 90px;
+  height: 32px;
+  line-height: 18px;
+  font-family: monospace;
+  font-size: 1.0em;
+  font-weight: bold;
+  padding: 0;
+  text-align: center;
+  color: #ffffff;
+}
+
+.gauge-container .value-text {
+  position: absolute;
+  display: inline-block;
+  top: 20px;
+  left: 0px;
+  width: 90px;
+  right: 30px;
+  line-height: 18px;
+  font-family: monospace;
+  font-size: 1.0em;
+  font-weight: normal;
+  text-align: center;
+  color: #ffffff;
+} 
+
+.gauge-canvas {}
+
+.gauge-container > .gauge .dial {
+  stroke: #334455;
+  stroke-width: 12;
+  fill: rgba(0,0,0,0);
+}
+
+.gauge-container > .gauge .value {
+  stroke: #ff0000;
+  stroke-width: 10;
+}
+
+.gauge-container > .gauge .value-text {
+  font-family: sans-serif;
+  font-weight: bold;
+  font-size: 1.2em;
+  fill: #ffffff;
+  transform: translate3d(0%, -2%, 0);
+}
+
+.gauge-block {
+  background-color: #a0a0a0;
+  height: 200px;
+  border-radius: 10px;
+  margin: 4px 0 4px 0;
+}
+
+.status-0 {background-color: #a0a0a0;}
+.status-1 {background-color: #7db835;}
+.status-2 {background-color: #e0c217;}
+.status-3 {background-color: #eb9973;}
+
+td.gauge-detail-frame {
+  padding: 6px 14px 0px 1px;
+  vertical-align: center;
+}
+
+table.gauge-detail-content tr {
+  border-style: none none solid none;
+  border-color: #e8eee3;                  /* old: #c0d3ae */
+}
+
+table.gauge-detail-content td {
+  font-size: 0.96em;
+  line-height: 26px;
+  color: #000000;
+}
