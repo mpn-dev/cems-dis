@@ -1,0 +1,59 @@
+<% define "admin.html" %><!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><% block "title" . %><% end %></title>
+  <meta name="csrf-token" content="<% .csrf_token %>">
+  <link rel="icon" type="image/jpg" href="/favicon.ico" />
+
+  <link rel="stylesheet" type="text/css" href="/libs/fonts/open-sans/open-sans.css">
+  <link rel="stylesheet" type="text/css" href="/libs/plugins/bootstrap/4.3.1/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="/libs/plugins/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" type="text/css" href="/libs/plugins/gijgo/1.9.14/css/gijgo.min.css">
+  <link rel="stylesheet" type="text/css" href="/libs/common/common.css">
+  <link rel="stylesheet" type="text/css" href="/libs/common/paging.css">
+  <link rel="stylesheet" type="text/css" href="/libs/common/gauge.css">
+
+  <script src="/libs/plugins/jquery/3.7.0/jquery.min.js"></script>
+  <script src="/libs/plugins/angular/angular.min.js"></script>
+  <script src="/libs/plugins/popper/1.11.0/popper.min.js"></script>
+  <script src="/libs/plugins/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+  <script src="/libs/plugins/gijgo/1.9.14/js/gijgo.min.js"></script>
+  <script src="/libs/plugins/chartjs/chart.js"></script>
+  <script src="/libs/common/ng-upload.min.js"></script>
+  <script src="/libs/common/webmon.js"></script>
+  <script src="/libs/common/common.js"></script>
+  <script src="/libs/common/paging.js"></script>
+  <script src="/libs/common/msgbox.js"></script>
+  <script src="/libs/common/gauge.js"></script>
+</head>
+<body class="bg-gray" ng-app="mainApp" ng-controller="mainCtrl">
+  <nav class="navbar navbar-expand-sm navbar-fixed-top justify-content-between"<% .custom_head_bgcolor %>>
+    <div>
+      <span class="navbar-brand text-nowrap">
+        <span class="nav-item dropdown">
+          <span class="dropdown-block" role="button" data-toggle="dropdown">
+            <i class="fa fa-list"></i>
+          </span>
+<% .menu_items %>        </span>
+
+        <img class="navbar-logo" src="<% .logo_left %>"></img>
+        <% .app_title %>
+      </span>
+    </div>
+    <div class="mr-2">
+      <span class="navbar-text"><% .user_name %></span>
+    </div>
+  </nav>
+  <div class="container-fluid px-0">
+    <div class="row content">
+      <div class="col" ng-controller="wmCtrl"><% block "content" . %><% end %>      </div>
+    </div>
+  </div>
+
+
+  <script>
+    mainApp.controller("mainCtrl", function($scope, $http) {});
+  </script>
+</body>
+</html><% end %>
