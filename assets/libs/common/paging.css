@@ -1,0 +1,19 @@
+.pg-btn {
+  display: inline-block;
+  min-width: 27px;
+  padding: 1px 3px;
+  margin: 0 1px;
+  border: 1px solid #909090;
+  border-radius: 2px;
+  color: #000000;
+  cursor: pointer;
+  text-align: center;
+}
+
+.pg-active {
+  background-color: #7ce7ff;
+}
+
+.pg-disabled {
+  color: #a0a0a0;
+}

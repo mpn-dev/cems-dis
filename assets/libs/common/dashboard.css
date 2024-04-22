@@ -1,0 +1,142 @@
+.uptodate {
+  background-color: #0d87f9;
+}
+
+.active {
+  background-color: #1f6281;
+}
+
+.inactive {
+  background-color: #605f5f;
+}
+
+.device {
+  padding-top: 2px;
+  font-size: 16px;
+  color: #ffffff;
+}
+
+.device:visited {
+  color: #ffffff;
+}
+
+.location {
+  padding-top: 10px;
+  font-size: 20px;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.location:visited {
+  color: #ffffff;
+}
+
+.device-info {
+  font-size: 14px
+}
+
+.device-info-box {
+}
+
+.device-info-header {
+}
+
+.device-info-title {
+  font-weight: bold;
+}
+
+table.device-info-table {
+  width: 100%;
+}
+
+table.device-info-table tr {
+  border-top: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.leaflet-top, .leaflet-bottom {
+  z-index: 800 !important;
+}
+
+.map-dropdown-block {
+  width: 33px;
+  height: 30px;
+  margin-left: 6px;
+  margin-right: 6px;
+  border: 1px solid #c0c0c0;
+  color: #d0d0d0;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  text-align: center;
+  line-height: 30px;
+  display: inline-block;
+}
+
+.map-dropdown-menu {
+  position: absolute;
+  top: 100px;
+  left: 15px;
+  width: 44px;
+  height: 30px;
+  z-index: 800;
+}
+
+.device-selection-window {
+  position: absolute;
+  top: 15px;
+  left: 20px;
+  width: 90%;
+  max-height: 86%;
+  height: 86%;
+  background-color: #00ff00;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid #a0a0a0;
+  font-family: Open Sans, Helvetica Neue;
+  font-size: 14px;
+  z-index: 1001;
+}
+
+@media screen and (min-width: 510px) {
+  .device-selection-window-md {
+    width: 480px;
+  }
+}
+
+.device-selection-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.device-selection-header {
+  width: 100%;
+  height: 80px;
+  padding: 15px 0;
+}
+
+.device-selection-content {
+  width: 100%;
+  padding: 4px;
+  overflow-y: auto;
+  background-color: #adadaa;
+}
+
+.device-selection-footer {
+  width: 100%;
+  height: 29px;
+  margin-top: 22px;
+  margin-bottom: 20px;
+  text-align: right;
+}
+
+.device-selection-item {
+  width: 100%;
+  padding: 2px 4px 2px 4px;
+  margin: 3px 0;
+  color: #ffffff;
+  border: 1px solid #6060a0;
+  border-radius: 4px;
+  cursor: pointer;
+}

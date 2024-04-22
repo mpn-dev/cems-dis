@@ -1,0 +1,301 @@
+<% template "admin.html" . %>
+<% define "title" %>Device<% end %>
+<% define "content" %>
+        <div class="row justify-content-between pb-2">
+          <div class="col col-sm-6">
+            <div class="title1a text-nowrap">{{titles[action]}}</div>
+          </div>
+          <div class="col pr-2" ng-show="ftab == 'list'">
+            <div class="input-group float-md-right pt-1" style="width: 328px;">
+              <div class="mr-2">
+                <button type="button" class="btn btn-sm btn-primary" style="width: 80px;" ng-class="{'active': !filterDisabled}" ng-click="clkDisabled()">Disabled</i></button>
+              </div>
+              <form>
+                <input type="text" class="input-sm" ng-model="searchKeywords" ng-change="resetPage()" placeholder="Search keywords"></input>
+                <div class="btn-group float-right">
+                  <button type="submit" class="btn btn-sm btn-outline" ng-click="loadDevices()"><i class="fa fa-refresh" title="Refresh"></i></button>
+                  <button type="button" class="btn btn-sm btn-outline" ng-click="clkCreate()"><i class="fa fa-plus" title="Buat Baru"></i></button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <span ng-show="ftab == 'list'" class="ng-cloak">
+          <table class="normal full highlight-row">
+            <tr>
+              <th>UID</th>
+              <th>DIS</th>
+              <th>Nama</th>
+              <th>Latitude</th>
+              <th>Longitude</th>
+              <th>API Key</th>
+              <th>Secret</th>
+              <th>Enabled</th>
+              <th>Created</th>
+              <th class="text-center">Action</th>
+            </tr>
+            <tr style="background-color: {{deviceRowColor(h)}};" ng-repeat="h in devices">
+              <td>{{h.uid}}</td>
+              <td>{{h.dis.name}}</td>
+              <td>{{h.name}}</td>
+              <td>{{h.latitude}}</td>
+              <td>{{h.longitude}}</td>
+              <td>{{h.apikey}}</td>
+              <td>{{h.secret}}</td>
+              <td>{{h.enabled > 0 ? "Yes" : "No"}}</td>
+              <td>{{h.created_at}}</td>
+              <td width="100px" class="text-center">
+                <a class="mx-1" href="#" ng-click="clkEdit(h.id, h.uid)">Edit</a>
+                <a class="mx-1" href="#" ng-click="clkDelete(h.id, h.uid)">Delete</a>
+              </td>
+            </tr>
+          </table>
+
+          <div class="row table-footer justify-content-between">
+            <div class="col"><div id="device-paging"></div></div>
+            <div class="col align-right text-nowrap">{{cntShown}} / {{cntDevice}}</div>
+          </div>
+        </span>
+
+        <span ng-show="(ftab == 'new') || (ftab == 'edit')" class="ng-cloak">
+          <form>
+            <table class="form">
+              <tr>
+                <td width="100px">UID</td>
+                <td width="200px"><input class="full" ng-model="device.uid" type="text" autocomplete="off" maxlength="24"></td>
+              </tr>
+              <tr>
+                <td>Nama</td>
+                <td><input class="full" ng-model="device.name" type="text" autocomplete="off"></td>
+              </tr>
+              <tr>
+                <td>Latitude</td>
+                <td><input class="full" ng-model="device.latitude" type="text" autocomplete="off"></td>
+              </tr>
+              <tr>
+                <td>Longitude</td>
+                <td><input class="full" ng-model="device.longitude" type="text" autocomplete="off"></td>
+              </tr>
+              <tr>
+                <td>API Key</td>
+                <td><input class="full" ng-model="device.apikey" type="text" autocomplete="off" maxlength="24"></td>
+              </tr>
+              <tr>
+                <td>API Secret</td>
+                <td><input class="full" ng-model="device.secret" type="text" autocomplete="off" maxlength="24"></td>
+              </tr>
+              <tr>
+                <td>Enabled</td>
+                <td>
+                  <select class="full" ng-model="device.enabled">
+                    <option ng-value="true">Yes</option>
+                    <option ng-value="false">No</option>
+                  </select>
+                </td>
+              </tr>
+            </table>
+
+            <hr>
+            <button type="submit" class="btn btn-sm btn-primary" ng-click="clkSave()" style="width: 80px">Simpan</button>
+            <button type="button" class="btn btn-sm btn-primary" ng-click="clkCancel()" style="width: 80px">Batal</button>
+          </form>
+        </span>
+
+        <div id="message-box"></div>
+
+
+        <script>
+          mainApp.controller('wmCtrl', function($scope, $window, $q, $http) {
+            $scope.titles = {
+              "list": "Daftar Device", 
+              "new": "Tambah Device", 
+              "edit": "Edit Device"
+            }
+
+            $scope.is_root = true;
+            $scope.sensors = [];
+            $scope.templateNames = [];
+            $scope.filterExpired = false;
+            $scope.filterDisabled = false;
+            $scope.searchKeywords = "";
+            $scope.devicePage = 1;
+            $scope.action = "list";
+            $scope.ftab = "list";
+
+            $scope.deviceRowColor = function(device) {
+              if(device.enabled == 0) {
+                return "#f0d2d2";
+              } else if(device.is_expired) {
+                return "#f1e1b8";
+              } else {
+                return "#ffffff";
+              }
+            }
+
+            $scope.loadDevices = function() {
+              var params = ["page=" + $scope.devicePage ? $scope.devicePage : 1];
+
+              if($scope.searchKeywords) {
+                params.push("q=" + $scope.searchKeywords);
+              }
+              if($scope.filterExpired) {
+                params.push("expired");
+              }
+              if($scope.filterDisabled) {
+                params.push("disabled")
+              }
+
+              $http.get("/api/v1/devices?" + params.join("&"), requestConfig()).then(
+                function(response){
+                  $scope.devices      = response.data.data;
+                  $scope.devicePage   = response.data.page;
+                  $scope.cntDevice    = response.data.rows;
+                  $scope.cntShown     = $scope.devices.length;
+                  paging(document.getElementById("device-paging"), $scope.devicePage, response.data.pages, 7, $scope.clkDevicePage, defaultPagingOptions());
+                }, 
+                defaultErrorHandler
+              );
+              $scope.action = 'list';
+              $scope.ftab = 'list';
+            }
+
+            $scope.resetPage = function() {
+              $scope.devicePage = 1;
+            }
+
+            $scope.clkDisabled = function() {
+              $scope.filterDisabled = !$scope.filterDisabled;
+              $scope.resetPage();
+              $scope.loadDevices();
+            }
+
+            $scope.clkProvinsi = function() {
+              $scope.lstKabupaten = [];
+              $scope.lstKecamatan = [];
+              $scope.lstDesa = [];
+              if($scope.device.kd_provinsi != null) {
+                $http.get("/api/v1/kabupaten/lookup?provinsi=" + $scope.device.kd_provinsi, requestConfig()).then(
+                  function(response) {
+                    $scope.lstKabupaten = response.data.data;
+                  }, 
+                  defaultErrorHandler
+                );
+              }
+            }
+
+            $scope.clkKabupaten = function() {
+              $scope.lstKecamatan = [];
+              $scope.lstDesa = [];
+              if($scope.device.kd_kabupaten != null) {
+                $http.get("/api/v1/kecamatan/lookup?kabupaten=" + $scope.device.kd_kabupaten, requestConfig()).then(
+                  function(response) {
+                    $scope.lstKecamatan = response.data.data;
+                  }, 
+                  defaultErrorHandler
+                );
+              }
+            }
+
+            $scope.clkKecamatan = function() {
+              $scope.lstDesa = [];
+              if($scope.device.kd_kecamatan != null) {
+                $http.get("/api/v1/desa/lookup?kecamatan=" + $scope.device.kd_kecamatan, requestConfig()).then(
+                  function(response) {
+                    $scope.lstDesa = response.data.data;
+                  }, 
+                  defaultErrorHandler
+                );
+              }
+            }
+
+            $scope.clkGenerateSecret = function() {
+              $http.get("/api/v1/devices/new-secret", requestConfig()).then(
+                function(response) {
+                  $scope.device.secret = response.data;
+                }
+              )
+            }
+
+            $scope.clkDevicePage = function(page) {
+              $scope.devicePage = page;
+              $scope.loadDevices();
+            }
+            
+            $scope.clkCreate = function() {
+              $scope.lstKabupaten = [];
+              $scope.lstKecamatan = [];
+              $scope.lstDesa = [];
+              $scope.device = {enabled: true};
+              $scope.action = 'new';
+              $scope.ftab = 'new';
+            }
+            
+            $scope.clkEdit = function(id, uid) {
+              $scope.old_id = id;
+              $scope.device = {};
+              $scope.lstKabupaten = [];
+              $scope.lstKecamatan = [];
+              $scope.lstDesa = [];
+
+              $http.get("/api/v1/devices/" + id, requestConfig()).then(
+                function(response) {
+                  $scope.device = response.data.data;
+                  $scope.clkProvinsi();
+                  $scope.clkKabupaten();
+                  $scope.clkKecamatan();
+                  $scope.action = 'edit';
+                  $scope.ftab = 'edit';
+                }, 
+                defaultErrorHandler
+              );
+            }
+            
+            $scope.clkDelete = function(id, uid) {
+              msgbox("message-box", "Hapus Device?", "UID: " + uid, {onclick: function(btn) {
+                if(btn == "OK") {
+                  $http.delete("/api/v1/devices/" + id, requestConfig()).then(
+                    function(response) {
+                      $scope.loadDevices();
+                    }, 
+                    defaultErrorHandler
+                  );
+                } else if(btn == "Cancel") {
+                  $scope.action = "list";
+                  $scope.ftab = "list";
+                }
+              }});
+            }
+
+            $scope.clkSave = function() {
+              var params = {
+                uid:        $scope.device.uid, 
+                dis_id:     $scope.device.dis_id, 
+                name:       $scope.device.name, 
+                latitude:   $scope.device.latitude ? parseFloat($scope.device.latitude) : null, 
+                longitude:  $scope.device.longitude ? parseFloat($scope.device.longitude) : null, 
+                apikey:     $scope.device.apikey, 
+                secret:     $scope.device.secret, 
+                enabled:    $scope.device.enabled > 0, 
+              };
+
+              var onSuccess = function() {
+                $scope.loadDevices();
+              };
+
+              if($scope.action == "new") {
+                $http.post("/api/v1/devices", JSON.stringify(params), requestConfig()).then(onSuccess, defaultErrorHandler);
+              } else {
+                $http.patch("/api/v1/devices/" + $scope.old_id, JSON.stringify(params), requestConfig()).then(onSuccess, defaultErrorHandler);
+              }
+            }
+            
+            $scope.clkCancel = function() {
+              $scope.action = 'list';
+              $scope.ftab = 'list';
+            }
+            
+            $scope.loadDevices();
+          });
+        </script>
+<% end %>
