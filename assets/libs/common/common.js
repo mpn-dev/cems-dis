@@ -17,8 +17,14 @@ function strToUtcTimestamp(value) {
     return 0;
   }
   var d2 = new Date(d1.getFullYear(), d1.getMonth(), d1.getDate());
-  // return (d2.valueOf() - (d2.getTimezoneOffset() * 60000)) / 1000;
   return d2.valueOf() / 1000;
+}
+
+function utcTimestampToStr(epoch) {
+  var d0 = (new Date(epoch * 1000));
+  var xx = epoch - (d0.getTimezoneOffset() * 60);
+  var d1 = (new Date((epoch - (d0.getTimezoneOffset() * 60)) * 1000));
+  return d1.toISOString().replace('T', ' ');
 }
 
 function getDateRange(datepicker1, datepicker2, name1, name2, allowEmpty = false) {
