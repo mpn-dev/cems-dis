@@ -117,7 +117,6 @@
           <table class="normal full highlight-row">
             <tr>
               <th>UID</th>
-              <th>DIS</th>
               <th>Nama</th>
               <th>Latitude</th>
               <th>Longitude</th>
@@ -128,7 +127,6 @@
             </tr>
             <tr ng-repeat="d in devices" ng-show="d.enabled > 0" ng-click="clkSelectDevice(d.id)" style="cursor: pointer;">
               <td>{{d.uid}}</td>
-              <td>{{d.dis.name}}</td>
               <td>{{d.name}}</td>
               <td>{{d.latitude}}</td>
               <td>{{d.longitude}}</td>
