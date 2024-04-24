@@ -88,7 +88,7 @@ func (s ApiService) DasLoginByUid(c *gin.Context) rs.Response {
 	return rs.Success(data)
 }
 
-func (s ApiService) CemsRefreshToken(c *gin.Context) rs.Response {
+func (s ApiService) DasRefreshToken(c *gin.Context) rs.Response {
 	var request struct{
 		RefreshToken		string	`json:"refresh_token"`
 	}
@@ -123,7 +123,7 @@ func (s ApiService) CemsRefreshToken(c *gin.Context) rs.Response {
 	return rs.Success(data)
 }
 
-func (s ApiService) CemsPushData(c *gin.Context) rs.Response {
+func (s ApiService) DasPushData(c *gin.Context) rs.Response {
 	loginToken := c.GetHeader("access_token")
 	loginToken = strings.Trim(loginToken, " ")
 	if len(loginToken) == 0 {
