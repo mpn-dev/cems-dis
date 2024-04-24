@@ -37,23 +37,23 @@ func registerApiRoutes(engine *gin.Engine, model *model.Model) {
   g.GET("/devices", j(api.ApiService.ListDevices))
   g.POST("/devices", j(api.ApiService.InsertDevice))
   g.GET("/devices/new-secret", j(api.ApiService.GenerateDeviceSecret))
-  g.GET("/devices/:id", j(api.ApiService.GetDevice))
-  g.PATCH("/devices/:id", j(api.ApiService.UpdateDevice))
-  g.DELETE("/devices/:id", j(api.ApiService.DeleteDevice))
-  g.GET("/devices/:id/raw-data", j(api.ApiService.CemsRawData))
-  g.GET("/devices/:id/emission-data", j(api.ApiService.CemsEmissionData))
-  g.GET("/devices/:id/percentage-data", j(api.ApiService.CemsPercentageData))
+  g.GET("/devices/:uid", j(api.ApiService.GetDevice))
+  g.PATCH("/devices/:uid", j(api.ApiService.UpdateDevice))
+  g.DELETE("/devices/:uid", j(api.ApiService.DeleteDevice))
+  g.GET("/devices/:uid/raw-data", j(api.ApiService.CemsRawData))
+  g.GET("/devices/:uid/emission-data", j(api.ApiService.CemsEmissionData))
+  g.GET("/devices/:uid/percentage-data", j(api.ApiService.CemsPercentageData))
   
   g.POST("/cems/login", j(api.ApiService.DasLogin))
-  g.POST("/cems/refresh-token", j(api.ApiService.CemsRefreshToken))
-  g.POST("/cems/push-data", j(api.ApiService.CemsPushData))
+  g.POST("/cems/refresh-token", j(api.ApiService.DasRefreshToken))
+  g.POST("/cems/push-data", j(api.ApiService.DasPushData))
   g.GET("/cems/records", j(api.ApiService.ListRawData))
   g.GET("/cems/records/:id", j(api.ApiService.GetRawDataById))
 
   // compatibility support for cems das-data
-  g.POST("/pengiriman-das", j(api.ApiService.CemsPushData))
+  g.POST("/pengiriman-das", j(api.ApiService.DasPushData))
   g.POST("/pengiriman-das/login", j(api.ApiService.DasLoginByUid))
-  g.POST("/pengiriman-das/refresh-token", j(api.ApiService.CemsRefreshToken))
+  g.POST("/pengiriman-das/refresh-token", j(api.ApiService.DasRefreshToken))
 }
 
 func registerWebRoutes(engine *gin.Engine, model *model.Model) {
@@ -64,6 +64,7 @@ func registerWebRoutes(engine *gin.Engine, model *model.Model) {
   g.GET("/emission-data", web.EmissionData)
   g.GET("/percentage-data", web.PercentageData)
   g.GET("/push-request", web.PushRequest)
+  g.GET("/dashboard", web.Dashboard)
 }
 
 func registerTemplates(engine *gin.Engine) {
@@ -75,11 +76,12 @@ func registerTemplates(engine *gin.Engine) {
   }
 
   tmplMap := map[string][]string{
-    "device.html":          []string{"views/content/device.html", "views/layout/admin.html"}, 
+    "dashboard.html":       []string{"views/content/dashboard.html", "views/layout/admin.html"}, 
     "raw_data.html":        []string{"views/content/raw_data.html", "views/layout/admin.html"}, 
     "emission_data.html":   []string{"views/content/emission_data.html", "views/layout/admin.html"}, 
     "percentage_data.html": []string{"views/content/percentage_data.html", "views/layout/admin.html"}, 
     "push_request.html":    []string{"views/content/push_request.html", "views/layout/admin.html"}, 
+    "device.html":          []string{"views/content/device.html", "views/layout/admin.html"}, 
   }
 
   // todo: reload templates if env == development
