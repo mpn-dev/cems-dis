@@ -41,8 +41,8 @@ func GenerateUserLoginToken(userId int64, userAgent string) string {
   return hex.EncodeToString(bytes[:])
 }
 
-func GenerateDeviceLoginToken(deviceId uint64) string {
-  bytes := sha256.Sum256([]byte(fmt.Sprintf("%s|%d|%d", utils.RandomString32(), deviceId, time.Now().UnixMicro())))
+func GenerateDeviceLoginToken(uid string) string {
+  bytes := sha256.Sum256([]byte(fmt.Sprintf("%s|%s|%d", utils.RandomString32(), uid, time.Now().UnixMicro())))
   return hex.EncodeToString(bytes[:])
 }
 

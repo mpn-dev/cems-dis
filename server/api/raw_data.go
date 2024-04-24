@@ -40,7 +40,7 @@ func (s ApiService) DasLogin(c *gin.Context) rs.Response {
 		return rs.Error(http.StatusBadRequest, "Secret salah")
 	}
 
-	token, err := s.model.CreateDeviceLoginToken(device.Id)
+	token, err := s.model.CreateDeviceLoginToken(device.UID)
 	if err != nil {
 		return rs.Error(http.StatusInternalServerError, err.Error())
 	}
@@ -73,10 +73,10 @@ func (s ApiService) DasLoginByUid(c *gin.Context) rs.Response {
 	device := &model.Device{}
 	err = s.model.DB.Where("uid = ?", login.UID).First(device).Error
 	if (err != nil) && errors.Is(err, gorm.ErrRecordNotFound) {
-		return rs.Error(http.StatusBadRequest, "UID tidak valid")
+		return rs.Error(http.StatusBadRequest, "UID tidak ada di database")
 	}
 
-	token, err := s.model.CreateDeviceLoginToken(device.Id)
+	token, err := s.model.CreateDeviceLoginToken(device.UID)
 	if err != nil {
 		return rs.Error(http.StatusInternalServerError, err.Error())
 	}
@@ -111,7 +111,7 @@ func (s ApiService) DasRefreshToken(c *gin.Context) rs.Response {
 		return rs.Error(http.StatusBadRequest, "Refresh token expired")
 	}
 
-	token, err := s.model.CreateDeviceLoginToken(deviceToken.DeviceId)
+	token, err := s.model.CreateDeviceLoginToken(deviceToken.DEV)
 	if err != nil {
 		return rs.Error(http.StatusInternalServerError, err.Error())
 	}
@@ -131,7 +131,7 @@ func (s ApiService) DasPushData(c *gin.Context) rs.Response {
 	}
 
 	deviceToken := &model.DeviceToken{}
-	err := s.model.DB.Where("login_token = ?", loginToken).Order("id DESC").First(deviceToken).Error
+	err := s.model.DB.Where("refresh_token = ?", loginToken).Order("id DESC").First(deviceToken).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return rs.Error(http.StatusBadRequest, "Akses token tidak valid")
@@ -139,11 +139,11 @@ func (s ApiService) DasPushData(c *gin.Context) rs.Response {
 			log.Warningf("DB error: %s", err.Error())
 			return rs.Error(http.StatusInternalServerError, "DB error")
 		}
-	} else if deviceToken.LoginExpiredAt.Before(time.Now()) {
+	} else if deviceToken.RefreshExpiredAt.Before(time.Now()) {
 		return rs.Error(http.StatusBadRequest, "Akses token expired")
 	}
 
-	device, err := s.model.GetDeviceById(deviceToken.DeviceId)
+	device, err := s.model.GetDeviceByUid(deviceToken.DEV)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return rs.Error(http.StatusBadRequest, "Device untuk akses token tersebut tidak ada di database")
@@ -160,10 +160,10 @@ func (s ApiService) DasPushData(c *gin.Context) rs.Response {
 		return rs.Error(http.StatusBadRequest, "Timestamp tidak valid")
 	}
 
-	record := model.NewRawData(device.Id, request)
+	record := model.NewRawData(device.UID, request)
 	existing := &model.RawData{}
 	s.model.DB.Model(existing).
-		Where("(device_id = ?) AND (timestamp = ?)", record.DeviceId, record.Timestamp).
+		Where("(uid = ?) AND (timestamp = ?)", record.DEV, record.Timestamp).
 		First(existing)
 	if existing.Id == 0 {
 		err = s.model.DB.Create(record).Error
