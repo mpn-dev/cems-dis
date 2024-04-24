@@ -4,6 +4,7 @@ go 1.22.0
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
+	github.com/alitto/pond v1.8.3
 	github.com/gin-contrib/sessions v1.0.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/pkg/errors v0.9.1
