@@ -125,7 +125,7 @@
               <th>Created</th>
               <th>Updated</th>
             </tr>
-            <tr ng-repeat="d in devices" ng-show="d.enabled > 0" ng-click="clkSelectDevice(d.id)" style="cursor: pointer;">
+            <tr ng-repeat="d in devices" ng-show="d.enabled > 0" ng-click="clkSelectDevice(d.uid)" style="cursor: pointer;">
               <td>{{d.uid}}</td>
               <td>{{d.name}}</td>
               <td>{{d.latitude}}</td>
@@ -198,7 +198,7 @@
             }
 
             $scope.epochToDate = function(epoch) {
-              return (new Date(epoch * 1000)).toISOString().replace('T', ' ').substring(0, 19);
+              return utcTimestampToStr(epoch).substring(0, 19);
             }
 
             $scope.resetDevicePage = function() {
@@ -214,6 +214,19 @@
 
               var url = "/res/device_logs/" + $scope.device.kd_hardware + "/download?ts1=" + range.start + "&ts2=" + range.end + "&token=" + getCsrfToken();
               window.open(url, "_blank");
+            }
+
+            $scope.loadDevices = function() {
+              var page = $scope.devicePage ? $scope.devicePage : 1;
+              var keywords = $scope.searchKeywords ? $scope.searchKeywords : "";
+              $http.get("/api/v1/devices?page=" + page + "&q=" + keywords, requestConfig()).then(
+                function(response) {
+                  $scope.devices = response.data.data;
+                  $scope.cntShownDevices = $scope.devices.length;
+                  $scope.cntTotalDevices = response.data.rows;
+                  paging(document.getElementById("devices-paging"), $scope.devicePage, $scope.devices.pages, 7, $scope.clkDevicePage, defaultPagingOptions());
+                }
+              );
             }
 
             $scope.updateChart = function() {
@@ -270,19 +283,6 @@
               }
             }
 
-            $scope.loadDevices = function() {
-              var page = $scope.devicePage ? $scope.devicePage : 1;
-              var keywords = $scope.searchKeywords ? $scope.searchKeywords : "";
-              $http.get("/api/v1/devices?page=" + page + "&q=" + keywords, requestConfig()).then(
-                function(response) {
-                  $scope.devices = response.data.data;
-                  $scope.cntShownDevices = $scope.devices.length;
-                  $scope.cntTotalDevices = response.data.rows;
-                  paging(document.getElementById("devices-paging"), $scope.devicePage, $scope.devices.pages, 7, $scope.clkDevicePage, defaultPagingOptions());
-                }
-              );
-            }
-
             $scope.presentData = function() {
               $scope.ftab = "list";
               $scope.tableData = {records: [], page: 1, pages: 1, rows: 20};
@@ -325,7 +325,7 @@
                 }
               }
 
-              var url = "/api/v1/devices/" + $scope.device.id + "/raw-data?" + options.join("&");
+              var url = "/api/v1/devices/" + $scope.device.uid + "/raw-data?" + options.join("&");
               $scope.isBusy = true;
               $http.get(url, requestConfig()).then(
                 function(response) {
