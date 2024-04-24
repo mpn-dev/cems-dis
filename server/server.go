@@ -40,9 +40,9 @@ func registerApiRoutes(engine *gin.Engine, model *model.Model) {
   g.GET("/devices/:uid", j(api.ApiService.GetDevice))
   g.PATCH("/devices/:uid", j(api.ApiService.UpdateDevice))
   g.DELETE("/devices/:uid", j(api.ApiService.DeleteDevice))
-  g.GET("/devices/:uid/raw-data", j(api.ApiService.CemsRawData))
-  g.GET("/devices/:uid/emission-data", j(api.ApiService.CemsEmissionData))
-  g.GET("/devices/:uid/percentage-data", j(api.ApiService.CemsPercentageData))
+  g.GET("/devices/:uid/raw-data", j(api.ApiService.ListRawData))
+  g.GET("/devices/:uid/emission-data", j(api.ApiService.ListEmissionData))
+  g.GET("/devices/:uid/percentage-data", j(api.ApiService.ListPercentageData))
   
   g.POST("/cems/login", j(api.ApiService.DasLogin))
   g.POST("/cems/refresh-token", j(api.ApiService.DasRefreshToken))
