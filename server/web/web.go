@@ -32,6 +32,10 @@ func PushRequest(c *gin.Context) {
 	handlePageByMenu(c, "push-request", "push_request.html", nil)
 }
 
+func Dashboard(c *gin.Context) {
+	handlePageByMenu(c, "dashboard", "dashboard.html", nil)
+}
+
 func selectMenu(c *gin.Context, menu string) {
   si := session_info.NewSessionInfo(c)
   si.SetSelectedMenu(menu)
