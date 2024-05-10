@@ -16,6 +16,10 @@ func Device(c *gin.Context) {
 	handlePageByMenu(c, "device", "device.html", nil)
 }
 
+func RelayStation(c *gin.Context) {
+	handlePageByMenu(c, "relay-station", "relay_station.html", nil)
+}
+
 func RawData(c *gin.Context) {
 	handlePageByMenu(c, "raw-data", "raw_data.html", nil)
 }

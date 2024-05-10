@@ -123,7 +123,7 @@ func (s ApiService) DasRefreshToken(c *gin.Context) rs.Response {
 	return rs.Success(data)
 }
 
-func (s ApiService) DasPushData(c *gin.Context) rs.Response {
+func (s ApiService) DasReceiveData(c *gin.Context) rs.Response {
 	loginToken := c.GetHeader("access_token")
 	loginToken = strings.Trim(loginToken, " ")
 	if len(loginToken) == 0 {
@@ -179,6 +179,10 @@ func (s ApiService) DasPushData(c *gin.Context) rs.Response {
 	}
 
 	return rs.Success(record.Out())
+}
+
+func (s ApiService) DasRelayData(d *model.RawData) error {
+	return nil
 }
 
 func (s ApiService) GetRawDataById(c *gin.Context) rs.Response {

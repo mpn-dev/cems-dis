@@ -4,8 +4,7 @@ import "time"
 
 type RawData struct {
   Id                  uint64      `gorm:"primaryKey"`
-  DEV                 string      `gorm:"column:uid;size:30;index"`
-  Device              Device      `gorm:"foreignKey:DEV;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+  DEV                 string      `gorm:"column:uid;size:32;index"`
   Timestamp           uint64
   SO2                 *float64
   NOX                 *float64
@@ -16,6 +15,7 @@ type RawData struct {
   O2                  *float64
   Temperature         *float64
   Pressure            *float64
+  Relayed             int
   CreatedAt           time.Time   `gorm:"autoCreateTime"`
   UpdatedAt           time.Time   `gorm:"autoUpdateTime"`
 }
@@ -46,6 +46,7 @@ type RawDataOut struct {
   O2                  *float64    `json:"o2"`
   Temperature         *float64    `json:"temperature"`
   Pressure            *float64    `json:"pressure"`
+  Relayed             int         `json:"relayed"`
   CreatedAt           string      `json:"created_at"`
   UpdatedAt           string      `json:"updated_at"`
 }
@@ -65,6 +66,7 @@ func (r *RawData) Out() *RawDataOut {
     O2:               r.O2, 
     Temperature:      r.Temperature, 
     Pressure:         r.Pressure, 
+    Relayed:          r.Relayed, 
     CreatedAt:        r.CreatedAt.Format(DEFAULT_DATE_TIME_FORMAT), 
     UpdatedAt:        r.UpdatedAt.Format(DEFAULT_DATE_TIME_FORMAT), 
   }
@@ -82,6 +84,7 @@ func (r *RawData) Update(f *RawData) {
   r.O2                = f.O2
   r.Temperature       = f.Temperature
   r.Pressure          = f.Pressure
+  r.Relayed           = f.Relayed
 }
 
 func NewRawData(uid string, i *RawDataIn) *RawData {
@@ -97,5 +100,6 @@ func NewRawData(uid string, i *RawDataIn) *RawData {
     O2:               i.O2, 
     Temperature:      i.Temperature, 
     Pressure:         i.Pressure, 
+    Relayed:          0, 
   }
 }
