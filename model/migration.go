@@ -35,8 +35,16 @@ func (m migration) initDevices() {
   m.createTable("devices", &Device{})
 }
 
+func (m migration) initRelayStations() {
+  m.createTable("relay_stations", &RelayStation{})
+}
+
 func (m migration) initDeviceTokens() {
   m.createTable("device_tokens", &DeviceToken{})
+}
+
+func (m migration) initTransmissions() {
+  m.createTable("transmissions", &Transmission{})
 }
 
 func (m migration) initRawData() {
@@ -45,7 +53,9 @@ func (m migration) initRawData() {
 
 func (m migration) Run() {
   m.initDevices()
+  m.initRelayStations()
   m.initDeviceTokens()
+  m.initTransmissions()
   m.initRawData()
 }
 

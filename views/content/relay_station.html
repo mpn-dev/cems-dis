@@ -1,0 +1,226 @@
+<% template "admin.html" . %>
+<% define "title" %>Relay Station<% end %>
+<% define "content" %>
+        <div class="row justify-content-between pb-2">
+          <div class="col col-sm-6">
+            <div class="title1a text-nowrap">{{titles[action]}}</div>
+          </div>
+          <div class="col pr-2" ng-show="ftab == 'list'">
+            <div class="input-group float-md-right pt-1" style="width: 328px;">
+              <div class="mr-2">
+                <button type="button" class="btn btn-sm btn-primary" style="width: 80px;" ng-class="{'active': !filterDisabled}" ng-click="clkDisabled()">Disabled</i></button>
+              </div>
+              <form>
+                <input type="text" class="input-sm" ng-model="searchKeywords" ng-change="resetPage()" placeholder="Search keywords"></input>
+                <div class="btn-group float-right">
+                  <button type="submit" class="btn btn-sm btn-outline" ng-click="loadRelayStations()"><i class="fa fa-refresh" title="Refresh"></i></button>
+                  <button type="button" class="btn btn-sm btn-outline" ng-click="clkCreate()"><i class="fa fa-plus" title="Buat Baru"></i></button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <span ng-show="ftab == 'list'" class="ng-cloak">
+          <table class="normal full highlight-row">
+            <tr>
+              <th>Nama</th>
+              <th>Protocol</th>
+              <th>Base URL</th>
+              <th>Enabled</th>
+              <th>Created</th>
+              <th class="text-center">Action</th>
+            </tr>
+            <tr ng-repeat="s in stations">
+              <td>{{s.name}}</td>
+              <td>{{s.protocol}}</td>
+              <td>{{s.base_url}}</td>
+              <td>{{s.enabled > 0 ? "Yes" : "No"}}</td>
+              <td>{{s.created_at}}</td>
+              <td width="100px" class="text-center">
+                <a class="mx-1" href="#" ng-click="clkEdit(s.id)">Edit</a>
+                <a class="mx-1" href="#" ng-click="clkDelete(s.id, s.name)">Delete</a>
+              </td>
+            </tr>
+          </table>
+
+          <div class="row table-footer justify-content-between">
+            <div class="col"><div id="station-paging"></div></div>
+            <div class="col align-right text-nowrap">{{cntShownStation}} / {{cntTotalStation}}</div>
+          </div>
+        </span>
+
+        <span ng-show="(ftab == 'new') || (ftab == 'edit')" class="ng-cloak">
+          <form>
+            <table class="form">
+              <tr>
+                <td width="100px">Nama</td>
+                <td width="200px"><input class="full" ng-model="station.name" type="text" autocomplete="off"></td>
+              </tr>
+              <tr>
+                <td>Protocol</td>
+                <td>
+                  <select class="full" ng-model="station.protocol">
+                    <option ng-repeat="p in protocols" value="{{p}}">{{p}}</option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <td>Base URL</td>
+                <td><input class="full" ng-model="station.base_url" type="text" autocomplete="off"></td>
+              </tr>
+              <tr>
+                <td>Enabled</td>
+                <td>
+                  <select class="full" ng-model="station.enabled">
+                    <option ng-value="true">Yes</option>
+                    <option ng-value="false">No</option>
+                  </select>
+                </td>
+              </tr>
+            </table>
+
+            <hr>
+            <button type="submit" class="btn btn-sm btn-primary" ng-click="clkSave()" style="width: 80px">Simpan</button>
+            <button type="button" class="btn btn-sm btn-primary" ng-click="clkCancel()" style="width: 80px">Batal</button>
+          </form>
+        </span>
+
+        <div id="message-box"></div>
+
+
+        <script>
+          mainApp.controller('wmCtrl', function($scope, $window, $q, $http) {
+            $scope.titles = {
+              "list": "Daftar Relay Station", 
+              "new": "Tambah Relay Station", 
+              "edit": "Edit Relay Station"
+            }
+
+            $scope.is_root = true;
+            $scope.protocols = [];
+            $scope.sensors = [];
+            $scope.templateNames = [];
+            $scope.filterExpired = false;
+            $scope.filterDisabled = false;
+            $scope.searchKeywords = "";
+            $scope.stationPage = 1;
+            $scope.action = "list";
+            $scope.ftab = "list";
+
+            $scope.loadProtocols = function() {
+              $http.get("/api/v1/relay-stations/supported-protocols").then(
+                function(response) {
+                  $scope.protocols = response.data.data;
+                }, 
+                defaultErrorHandler
+              )
+            }
+
+            $scope.loadRelayStations = function() {
+              var params = ["page=" + $scope.stationPage ? $scope.stationPage : 1];
+
+              if($scope.searchKeywords) {
+                params.push("q=" + $scope.searchKeywords);
+              }
+              if($scope.filterExpired) {
+                params.push("expired");
+              }
+              if($scope.filterDisabled) {
+                params.push("disabled")
+              }
+
+              $http.get("/api/v1/relay-stations?" + params.join("&"), requestConfig()).then(
+                function(response){
+                  $scope.stations         = response.data.data;
+                  $scope.stationPage      = response.data.page;
+                  $scope.cntTotalStation  = response.data.rows;
+                  $scope.cntShownStation  = $scope.stations.length;
+                  paging(document.getElementById("station-paging"), $scope.stationPage, response.data.pages, 7, $scope.clkStationPage, defaultPagingOptions());
+                }, 
+                defaultErrorHandler
+              );
+              $scope.action = 'list';
+              $scope.ftab = 'list';
+            }
+
+            $scope.resetPage = function() {
+              $scope.stationPage = 1;
+            }
+
+            $scope.clkDisabled = function() {
+              $scope.filterDisabled = !$scope.filterDisabled;
+              $scope.resetPage();
+              $scope.loadRelayStations();
+            }
+
+            $scope.clkStationPage = function(page) {
+              $scope.stationPage = page;
+              $scope.loadRelayStations();
+            }
+            
+            $scope.clkCreate = function() {
+              $scope.station = {enabled: true};
+              $scope.action = 'new';
+              $scope.ftab = 'new';
+            }
+            
+            $scope.clkEdit = function(id) {
+              $scope.oldStationId = id;
+              $scope.station = {};
+
+              $http.get("/api/v1/relay-stations/" + id, requestConfig()).then(
+                function(response) {
+                  $scope.station = response.data.data;
+                  $scope.action = 'edit';
+                  $scope.ftab = 'edit';
+                }, 
+                defaultErrorHandler
+              );
+            }
+            
+            $scope.clkDelete = function(id, name) {
+              msgbox("message-box", "Hapus Relay Station?", "Nama: " + name, {onclick: function(btn) {
+                if(btn == "OK") {
+                  $http.delete("/api/v1/relay-stations/" + id, requestConfig()).then(
+                    function(response) {
+                      $scope.loadRelayStations();
+                    }, 
+                    defaultErrorHandler
+                  );
+                } else if(btn == "Cancel") {
+                  $scope.action = "list";
+                  $scope.ftab = "list";
+                }
+              }});
+            }
+
+            $scope.clkSave = function() {
+              var params = {
+                name:       $scope.station.name, 
+                protocol:   $scope.station.protocol, 
+                base_url:   $scope.station.base_url, 
+                enabled:    $scope.station.enabled > 0, 
+              };
+
+              var onSuccess = function() {
+                $scope.loadRelayStations();
+              };
+
+              if($scope.action == "new") {
+                $http.post("/api/v1/relay-stations", JSON.stringify(params), requestConfig()).then(onSuccess, defaultErrorHandler);
+              } else {
+                $http.patch("/api/v1/relay-stations/" + $scope.oldStationId, JSON.stringify(params), requestConfig()).then(onSuccess, defaultErrorHandler);
+              }
+            }
+            
+            $scope.clkCancel = function() {
+              $scope.action = 'list';
+              $scope.ftab = 'list';
+            }
+
+            $scope.loadProtocols();            
+            $scope.loadRelayStations();
+          });
+        </script>
+<% end %>
