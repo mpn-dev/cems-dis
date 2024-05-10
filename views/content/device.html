@@ -44,8 +44,8 @@
               <td>{{h.enabled > 0 ? "Yes" : "No"}}</td>
               <td>{{h.created_at}}</td>
               <td width="100px" class="text-center">
-                <a class="mx-1" href="#" ng-click="clkEdit(h.id, h.uid)">Edit</a>
-                <a class="mx-1" href="#" ng-click="clkDelete(h.id, h.uid)">Delete</a>
+                <a class="mx-1" href="#" ng-click="clkEdit(h.uid)">Edit</a>
+                <a class="mx-1" href="#" ng-click="clkDelete(h.uid)">Delete</a>
               </td>
             </tr>
           </table>
@@ -229,14 +229,14 @@
               $scope.ftab = 'new';
             }
             
-            $scope.clkEdit = function(id, uid) {
-              $scope.old_id = id;
+            $scope.clkEdit = function(uid) {
+              $scope.oldUid = uid;
               $scope.device = {};
               $scope.lstKabupaten = [];
               $scope.lstKecamatan = [];
               $scope.lstDesa = [];
 
-              $http.get("/api/v1/devices/" + id, requestConfig()).then(
+              $http.get("/api/v1/devices/" + uid, requestConfig()).then(
                 function(response) {
                   $scope.device = response.data.data;
                   $scope.clkProvinsi();
@@ -249,10 +249,10 @@
               );
             }
             
-            $scope.clkDelete = function(id, uid) {
+            $scope.clkDelete = function(uid) {
               msgbox("message-box", "Hapus Device?", "UID: " + uid, {onclick: function(btn) {
                 if(btn == "OK") {
-                  $http.delete("/api/v1/devices/" + id, requestConfig()).then(
+                  $http.delete("/api/v1/devices/" + uid, requestConfig()).then(
                     function(response) {
                       $scope.loadDevices();
                     }, 
@@ -283,7 +283,7 @@
               if($scope.action == "new") {
                 $http.post("/api/v1/devices", JSON.stringify(params), requestConfig()).then(onSuccess, defaultErrorHandler);
               } else {
-                $http.patch("/api/v1/devices/" + $scope.old_id, JSON.stringify(params), requestConfig()).then(onSuccess, defaultErrorHandler);
+                $http.patch("/api/v1/devices/" + $scope.oldUid, JSON.stringify(params), requestConfig()).then(onSuccess, defaultErrorHandler);
               }
             }
             

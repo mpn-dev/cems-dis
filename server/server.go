@@ -40,18 +40,25 @@ func registerApiRoutes(engine *gin.Engine, model *model.Model) {
   g.GET("/devices/:uid", j(api.ApiService.GetDevice))
   g.PATCH("/devices/:uid", j(api.ApiService.UpdateDevice))
   g.DELETE("/devices/:uid", j(api.ApiService.DeleteDevice))
-  g.GET("/devices/:uid/raw-data", j(api.ApiService.CemsRawData))
-  g.GET("/devices/:uid/emission-data", j(api.ApiService.CemsEmissionData))
-  g.GET("/devices/:uid/percentage-data", j(api.ApiService.CemsPercentageData))
+  g.GET("/devices/:uid/raw-data", j(api.ApiService.ListRawData))
+  g.GET("/devices/:uid/emission-data", j(api.ApiService.ListEmissionData))
+  g.GET("/devices/:uid/percentage-data", j(api.ApiService.ListPercentageData))
+
+  g.GET("/relay-stations", j(api.ApiService.ListRelayStation))
+  g.POST("/relay-stations", j(api.ApiService.InsertRelayStation))
+  g.GET("/relay-stations/supported-protocols", j(api.ApiService.RelayStationProtocols))
+  g.GET("/relay-stations/:id", j(api.ApiService.GetRelayStation))
+  g.PATCH("/relay-stations/:id", j(api.ApiService.UpdateRelayStation))
+  g.DELETE("/relay-stations/:id", j(api.ApiService.DeleteRelayStation))
   
   g.POST("/cems/login", j(api.ApiService.DasLogin))
   g.POST("/cems/refresh-token", j(api.ApiService.DasRefreshToken))
-  g.POST("/cems/push-data", j(api.ApiService.DasPushData))
+  g.POST("/cems/push-data", j(api.ApiService.DasReceiveData))
   g.GET("/cems/records", j(api.ApiService.ListRawData))
   g.GET("/cems/records/:id", j(api.ApiService.GetRawDataById))
 
   // compatibility support for cems das-data
-  g.POST("/pengiriman-das", j(api.ApiService.DasPushData))
+  g.POST("/pengiriman-das", j(api.ApiService.DasReceiveData))
   g.POST("/pengiriman-das/login", j(api.ApiService.DasLoginByUid))
   g.POST("/pengiriman-das/refresh-token", j(api.ApiService.DasRefreshToken))
 }
@@ -60,6 +67,7 @@ func registerWebRoutes(engine *gin.Engine, model *model.Model) {
   g := engine.Group("web")
   
   g.GET("/device", web.Device)
+  g.GET("/relay-station", web.RelayStation)
   g.GET("/raw-data", web.RawData)
   g.GET("/emission-data", web.EmissionData)
   g.GET("/percentage-data", web.PercentageData)
@@ -81,6 +89,7 @@ func registerTemplates(engine *gin.Engine) {
     "emission_data.html":   []string{"views/content/emission_data.html", "views/layout/admin.html"}, 
     "percentage_data.html": []string{"views/content/percentage_data.html", "views/layout/admin.html"}, 
     "push_request.html":    []string{"views/content/push_request.html", "views/layout/admin.html"}, 
+    "relay_station.html":   []string{"views/content/relay_station.html", "views/layout/admin.html"}, 
     "device.html":          []string{"views/content/device.html", "views/layout/admin.html"}, 
   }
 

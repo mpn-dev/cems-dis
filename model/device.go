@@ -12,9 +12,10 @@ import (
   "cems-dis/config"
 )
 
+const MAX_DEVICE_UID_LENGTH = 32
+
 type Device struct {
-  Id          uint64                `json:"id"          gorm:"primaryKey"`
-  UID         string                `json:"uid"         gorm:"index;size:30"`
+  UID         string                `json:"uid"         gorm:"size:32;primaryKey"`
   Name        string                `json:"name"        gorm:"size:30"`
   Latitude    *float64              `json:"latitude"`
   Longitude   *float64              `json:"longitude"`
@@ -33,7 +34,8 @@ type DeviceOut struct {
 
 type DeviceToken struct {
   Id                  uint64        `gorm:"primaryKey"`
-  DeviceId            uint64        `gorm:"index"`
+  DEV                 string        `gorm:"column:uid;size:32;index"`
+  Device              Device        `gorm:"foreignKey:DEV;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
   LoginToken          string        `gorm:"index;size:64"`
   RefreshToken        string        `gorm:"index;size:64"`
   LoginExpiredAt      time.Time
@@ -49,7 +51,6 @@ type DeviceLogin struct {
 
 func (d *Device) Copy() *Device {
   return &Device{
-    Id:         d.Id, 
     UID:        d.UID, 
     Name:       d.Name, 
     Latitude:   d.Latitude, 
@@ -88,20 +89,6 @@ func (d *Device) Out() *DeviceOut {
 }
 
 
-func (m *Model) GetDeviceById(id uint64) (*Device, error) {
-  device := &Device{}
-  err := m.DB.First(device, id).Error
-  if err != nil {
-    if errors.Is(err, gorm.ErrRecordNotFound) {
-      return nil, errors.New(fmt.Sprintf("ID device '%d' tidak ada di database", id))
-    } else {
-      log.Warningf("DB error: %s", err.Error())
-      return nil, errors.New("DB error")
-    }
-  }
-  return device, nil
-}
-
 func (m *Model) GetDeviceByUid(uid string) (*Device, error) {
   device := &Device{}
   if err := m.DB.Where("uid = ?", uid).First(device).Error; err != nil {
@@ -115,38 +102,38 @@ func (m *Model) GetDeviceByUid(uid string) (*Device, error) {
   return device, nil
 }
 
-func (m *Model) IsDeviceExist(id uint64) bool {
-  device, _ := m.GetDeviceById(id)
+func (m *Model) IsDeviceExist(uid string) bool {
+  device, _ := m.GetDeviceByUid(uid)
   return device != nil
 }
 
-func (m *Model) IsDeviceUidTaken(uid string, idNot uint64) bool {
+func (m *Model) IsDeviceUidTaken(uid string, uidNot string) bool {
   device := &Device{}
-  err := m.DB.Where("(uid = ?) AND (id <> ?)", uid, idNot).First(device).Error
+  err := m.DB.Where("(uid = ?) AND (uid <> ?)", uid, uidNot).First(device).Error
   if (err != nil) && (errors.Is(err, gorm.ErrRecordNotFound)) {
     return false
   }
   return true
 }
 
-func (m *Model) IsDeviceApiKeyTaken(apiKey string, idNot uint64) bool {
+func (m *Model) IsDeviceApiKeyTaken(apiKey string, uidNot string) bool {
   device := &Device{}
-  err := m.DB.Where("(api_key = ?) AND (id <> ?)", apiKey, idNot).First(device).Error
+  err := m.DB.Where("(api_key = ?) AND (uid <> ?)", apiKey, uidNot).First(device).Error
   if (err != nil) && errors.Is(err, gorm.ErrRecordNotFound) {
     return false
   }
   return true
 }
 
-func (m *Model) CreateDeviceLoginToken(deviceId uint64) (*DeviceToken, error) {
-  m.DB.Model(&DeviceToken{}).Where("(device_id = ?) AND ((login_expired_at = ?) OR (login_expired_at > ?))", deviceId, nil, time.Now()).
+func (m *Model) CreateDeviceLoginToken(uid string) (*DeviceToken, error) {
+  m.DB.Model(&DeviceToken{}).Where("(uid = ?) AND ((login_expired_at = ?) OR (login_expired_at > ?))", uid, nil, time.Now()).
     Update("login_expired_at", time.Now())
-  m.DB.Model(&DeviceToken{}).Where("(device_id = ?) AND ((refresh_expired_at = ?) OR (refresh_expired_at > ?))", deviceId, nil, time.Now()).
+  m.DB.Model(&DeviceToken{}).Where("(uid = ?) AND ((refresh_expired_at = ?) OR (refresh_expired_at > ?))", uid, nil, time.Now()).
     Update("refresh_expired_at", time.Now())
   token := &DeviceToken{
-    DeviceId:           deviceId, 
-    LoginToken:         GenerateDeviceLoginToken(deviceId), 
-    RefreshToken:       GenerateDeviceLoginToken(deviceId), 
+    DEV:                uid, 
+    LoginToken:         GenerateDeviceLoginToken(uid), 
+    RefreshToken:       GenerateDeviceLoginToken(uid), 
     LoginExpiredAt:     time.Now().Add(time.Duration(config.DeviceLoginTokenAge()) * time.Second), 
     RefreshExpiredAt:   time.Now().Add(time.Duration(config.DeviceRefreshTokenAge()) * time.Second), 
   }
@@ -158,8 +145,8 @@ func (m *Model) CreateDeviceLoginToken(deviceId uint64) (*DeviceToken, error) {
   return token, nil
 }
 
-func (m *Model) DeleteDeviceById(id uint64) error {
-  err := m.DB.Delete(&Device{}, id).Error
+func (m *Model) DeleteDeviceByUid(uid string) error {
+  err := m.DB.Delete(&Device{UID: uid}).Error
   if err != nil {
     log.Warningf("DB error: %s", err.Error())
     return errors.New("DB error")
