@@ -1,20 +1,19 @@
-package internal
+package workers
 
 import (
-  "fmt"
-  "math/rand"
-  "time"
   "github.com/alitto/pond"
 )
 
-var pool pond.Pond
+var pool *pond.WorkerPool
 
-func StartWorker(fn func()) {
+func StartJob(fn func()) {
 	pool.Submit(fn)
 }
 
 func StopWorkersAndWait() {
-	pool.StopAndWait()
+  if pool != nil {
+  	pool.StopAndWait()
+  }
 }
 
 func RunningWorkers() int {
@@ -22,5 +21,7 @@ func RunningWorkers() int {
 }
 
 func InitWorkers() {
-  pool = pond.New(100, 1000)
+  if pool == nil {
+    pool = pond.New(100, 1000)
+  }
 }
