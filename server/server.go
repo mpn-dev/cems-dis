@@ -17,6 +17,13 @@ import (
   "cems-dis/server/web"
 )
 
+
+type Server struct {
+  engine  *gin.Engine
+  port    int
+}
+
+
 func registerMiscRoutes(engine *gin.Engine, model *model.Model) {
   engine.GET("/", func(c *gin.Context) {
     c.Redirect(http.StatusMovedPermanently, "/web/device")
@@ -107,7 +114,12 @@ func registerTemplates(engine *gin.Engine) {
   engine.HTMLRender = render
 }
 
-func Start(model *model.Model) {
+func (s Server) Start() {
+  log.Infof("Serving on port %d\n", s.port)
+  s.engine.Run(fmt.Sprintf("0.0.0.0:%d", s.port))
+}
+
+func New(model *model.Model) Server {
   secret := cookie.NewStore([]byte("secret"))
   engine := gin.Default()
   engine.ForwardedByClientIP = true
@@ -120,7 +132,8 @@ func Start(model *model.Model) {
   registerWebRoutes(engine, model)
   registerMiscRoutes(engine, model)
 
-  serverPort := config.ServerPort()
-  log.Infof("Serving on port %d\n", serverPort)
-  engine.Run(fmt.Sprintf("0.0.0.0:%d", serverPort))
+  return Server{
+    engine: engine, 
+    port:   config.ServerPort(), 
+  }
 }

@@ -5,9 +5,9 @@ import (
 )
 
 type Transmission struct {
-	Id							int64					`json:"id"								gorm:"primaryKey"`
+	Id							uint64				`json:"id"								gorm:"primaryKey"`
+	RawDataId				uint64				`json:"raw_data_id"				gorm:"index"`
 	RelayStationId	int64					`json:"relay_station_id"	gorm:"index"`
-	RelayStation	  RelayStation	`json:"relay_station"`
 	Code						int						`json:"code"							gorm:"index"`
 	Error						string				`json:"error"							gorm:"size:100"`
 	Status					string				`json:"status"						gorm:"size:20"`
@@ -32,4 +32,26 @@ func (t *Transmission) Out() *TransmissionOut {
 
 func SupportedRelayProtocols() []string {
 	return []string{"CEMS-MPN", "CEMS-KLHK"}
+}
+
+
+func (m *Model) SetTransmissionStarted(task Transmission) {
+	task.Code = 0
+	task.Error = ""
+	task.Status = "Started"
+	m.DB.Save(&task)
+}
+
+func (m *Model) SetTransmissionSuccess(task Transmission) {
+	task.Code = 0
+	task.Error = ""
+	task.Status = "Success"
+	m.DB.Save(&task)
+}
+
+func (m *Model) SetTransmissionError(task Transmission, code int, error string) {
+	task.Code = code
+	task.Error = error
+	task.Status = "Error"
+	m.DB.Save(&task)
 }

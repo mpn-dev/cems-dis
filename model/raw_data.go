@@ -1,6 +1,11 @@
 package model
 
-import "time"
+import (
+  "time"
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
+  "gorm.io/gorm"
+)
 
 type RawData struct {
   Id                  uint64      `gorm:"primaryKey"`
@@ -15,7 +20,6 @@ type RawData struct {
   O2                  *float64
   Temperature         *float64
   Pressure            *float64
-  Relayed             int
   CreatedAt           time.Time   `gorm:"autoCreateTime"`
   UpdatedAt           time.Time   `gorm:"autoUpdateTime"`
 }
@@ -34,41 +38,43 @@ type RawDataIn struct {
 }
 
 type RawDataOut struct {
-  Id                  uint64      `json:"id"`
-  DEV                 string      `json:"uid"`
-  Timestamp           uint64      `json:"timestamp"`
-  SO2                 *float64    `json:"so2"`
-  NOX                 *float64    `json:"nox"`
-  PM                  *float64    `json:"pm"`
-  H2S                 *float64    `json:"h2s"`
-  Opacity             *float64    `json:"opacity"`
-  Flow                *float64    `json:"flow"`
-  O2                  *float64    `json:"o2"`
-  Temperature         *float64    `json:"temperature"`
-  Pressure            *float64    `json:"pressure"`
-  Relayed             int         `json:"relayed"`
+  RawData
   CreatedAt           string      `json:"created_at"`
   UpdatedAt           string      `json:"updated_at"`
+}
+
+type SensorValues map[string]*float64
+
+type CemsPayload struct {
+	UID					string				`json:"uid"`
+	Timestamp		uint64				`json:"timestamp"`
+	Values			SensorValues	`json:"values"`
 }
 
 
 func (r *RawData) Out() *RawDataOut {
   return &RawDataOut{
-    Id:               r.Id, 
-    DEV:              r.DEV, 
-    Timestamp:        r.Timestamp, 
-    SO2:              r.SO2, 
-    NOX:              r.NOX, 
-    PM:               r.PM, 
-    H2S:              r.H2S, 
-    Opacity:          r.Opacity, 
-    Flow:             r.Flow, 
-    O2:               r.O2, 
-    Temperature:      r.Temperature, 
-    Pressure:         r.Pressure, 
-    Relayed:          r.Relayed, 
+    RawData:          *r, 
     CreatedAt:        r.CreatedAt.Format(DEFAULT_DATE_TIME_FORMAT), 
     UpdatedAt:        r.UpdatedAt.Format(DEFAULT_DATE_TIME_FORMAT), 
+  }
+}
+
+func (r *RawData) CemsPayload() *CemsPayload {
+  return &CemsPayload{
+    UID:        r.DEV, 
+    Timestamp:  r.Timestamp, 
+    Values:     SensorValues{
+      "so2":          r.SO2, 
+      "nox":          r.NOX, 
+      "pm":           r.PM, 
+      "h2s":          r.H2S, 
+      "opacity":      r.Opacity, 
+      "flow":         r.Flow, 
+      "o2":           r.O2, 
+      "temperature":  r.Temperature, 
+      "pressure":     r.Pressure, 
+    }, 
   }
 }
 
@@ -84,7 +90,19 @@ func (r *RawData) Update(f *RawData) {
   r.O2                = f.O2
   r.Temperature       = f.Temperature
   r.Pressure          = f.Pressure
-  r.Relayed           = f.Relayed
+}
+
+func (m *Model) GetRawDataById(id uint64) (*RawDataOut, error) {
+	record := &RawData{}
+	if err := m.DB.Model(record).First(record, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		} else {
+			log.Warningf("raw_data.GetRawDataById => DB error: %+v", errors.WithStack(err))
+			return nil, errors.New("DB error")
+		}
+	}
+	return record.Out(), nil
 }
 
 func NewRawData(uid string, i *RawDataIn) *RawData {
@@ -100,6 +118,5 @@ func NewRawData(uid string, i *RawDataIn) *RawData {
     O2:               i.O2, 
     Temperature:      i.Temperature, 
     Pressure:         i.Pressure, 
-    Relayed:          0, 
   }
 }
