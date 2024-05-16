@@ -9,7 +9,7 @@ type Transmission struct {
 	RawDataId				uint64				`json:"raw_data_id"				gorm:"index"`
 	RelayStationId	int64					`json:"relay_station_id"	gorm:"index"`
 	Code						int						`json:"code"							gorm:"index"`
-	Error						string				`json:"error"							gorm:"size:100"`
+	Info						string				`json:"info"							gorm:"size:100"`
 	Status					string				`json:"status"						gorm:"size:20"`
 	CreatedAt				time.Time			`													gorm:"autoCreateTime"`
 	UpdatedAt				time.Time			`													gorm:"autoUpdateTime"`
@@ -35,23 +35,30 @@ func SupportedRelayProtocols() []string {
 }
 
 
-func (m *Model) SetTransmissionStarted(task Transmission) {
+func (m *Model) SetTransmissionPending(task Transmission) {
 	task.Code = 0
-	task.Error = ""
+	task.Info = ""
 	task.Status = "Started"
 	m.DB.Save(&task)
 }
 
-func (m *Model) SetTransmissionSuccess(task Transmission) {
+func (m *Model) SetTransmissionStarted(task Transmission) {
 	task.Code = 0
-	task.Error = ""
+	task.Info = ""
+	task.Status = "Started"
+	m.DB.Save(&task)
+}
+
+func (m *Model) SetTransmissionSuccess(task Transmission, info string) {
+	task.Code = 200
+	task.Info = info
 	task.Status = "Success"
 	m.DB.Save(&task)
 }
 
 func (m *Model) SetTransmissionError(task Transmission, code int, error string) {
 	task.Code = code
-	task.Error = error
+	task.Info = error
 	task.Status = "Error"
 	m.DB.Save(&task)
 }

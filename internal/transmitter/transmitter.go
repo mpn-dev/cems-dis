@@ -33,7 +33,7 @@ func Start() {
 
 		sleepSecs(1)
 		var tasks []*model.Transmission
-		err := trx.model.DB.Model(model.Transmission{}).Where("status = ?", "Pending").Limit(1).Find(&tasks).Error
+		err := trx.model.DB.Model(model.Transmission{}).Where("status = ?", "Pending").Order("updated_at").Limit(1).Find(&tasks).Error
 		if err != nil {
 			log.Warningf("transmitter.Start => Error fetching transmission data: %s", err.Error())
 		}
@@ -65,6 +65,7 @@ func Start() {
 				continue
 			}
 
+			fmt.Printf("[Send task #%d]\n", task.Id)
 			protocol.Send(task, *station)
 		}
 	}
