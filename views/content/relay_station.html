@@ -27,6 +27,8 @@
               <th>Nama</th>
               <th>Protocol</th>
               <th>Base URL</th>
+              <th>User Name</th>
+              <th>Password</th>
               <th>Enabled</th>
               <th>Created</th>
               <th class="text-center">Action</th>
@@ -35,6 +37,8 @@
               <td>{{s.name}}</td>
               <td>{{s.protocol}}</td>
               <td>{{s.base_url}}</td>
+              <td>{{s.username}}</td>
+              <td>{{s.password}}</td>
               <td>{{s.enabled > 0 ? "Yes" : "No"}}</td>
               <td>{{s.created_at}}</td>
               <td width="100px" class="text-center">
@@ -68,6 +72,14 @@
               <tr>
                 <td>Base URL</td>
                 <td><input class="full" ng-model="station.base_url" type="text" autocomplete="off"></td>
+              </tr>
+              <tr>
+                <td>User Name</td>
+                <td><input class="full" ng-model="station.username" type="text" autocomplete="off"></td>
+              </tr>
+              <tr>
+                <td>Password</td>
+                <td><input class="full" ng-model="station.password" type="text" autocomplete="off"></td>
               </tr>
               <tr>
                 <td>Enabled</td>
@@ -200,6 +212,8 @@
                 name:       $scope.station.name, 
                 protocol:   $scope.station.protocol, 
                 base_url:   $scope.station.base_url, 
+                username:   $scope.station.username, 
+                password:   $scope.station.password, 
                 enabled:    $scope.station.enabled > 0, 
               };
 

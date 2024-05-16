@@ -178,6 +178,8 @@ func (s ApiService) DasReceiveData(c *gin.Context) rs.Response {
 		return rs.Error(http.StatusInternalServerError, "DB error")
 	}
 
+	s.queueDataTransmission(record.Id);
+
 	return rs.Success(record.Out())
 }
 
@@ -186,18 +188,13 @@ func (s ApiService) DasRelayData(d *model.RawData) error {
 }
 
 func (s ApiService) GetRawDataById(c *gin.Context) rs.Response {
-	record := &model.RawData{}
-	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
+	record, err := s.model.GetRawDataById(id)
 	if err != nil {
-		return rs.Error(http.StatusBadRequest, "Invalid record ID")
+		return rs.Error(http.StatusInternalServerError, "Invalid record ID")
 	}
-	if err := s.model.DB.Model(record).First(record, id).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return rs.Error(http.StatusNotFound, "Record ID not found")
-		} else {
-			log.Warningf("DB error: %+v", errors.WithStack(err))
-			return rs.Error(http.StatusInternalServerError, "DB error")
-		}
+	if record == nil {
+		return rs.Error(http.StatusNotFound, "Record ID not found")
 	}
 	return rs.Success(record.Out())
 }
@@ -248,4 +245,23 @@ func (s ApiService) ListEmissionData(c *gin.Context) rs.Response {
 
 func (s ApiService) ListPercentageData(c *gin.Context) rs.Response {
 	return rs.Success(nil)
+}
+
+func (s ApiService) queueDataTransmission(rawDataId uint64) {
+	var stations []*model.RelayStation
+	err := s.model.DB.Model(&model.RelayStation{}).Where("enabled = ?", true).Find(&stations).Error
+	if err != nil {
+		log.Warningf("DB error: %s", err.Error())
+		return
+	}
+	for _, sta := range stations {
+		trx := model.Transmission{
+			RawDataId:			rawDataId, 
+			RelayStationId:	sta.Id, 
+			Code:						0, 
+			Error:					"", 
+			Status:					"Pending", 
+		}
+		s.model.DB.Save(&trx)
+	}
 }
