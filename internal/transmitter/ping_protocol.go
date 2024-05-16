@@ -32,14 +32,11 @@ func sendPing() {
 }
 
 func (p *PingProtocol) Send(task model.Transmission, station model.RelayStation) {
-	task.Code = 0
-	task.Error = ""
-	task.Status = "Started"
-	p.model.DB.Save(&task)
-	fmt.Println("Transmitting data...")
+	p.model.SetTransmissionStarted(task)
+	fmt.Println("Transmitting data using ping protocol...")
 	sendPing()
-	task.Status = "Success"
-	p.model.DB.Save(&task)
+	p.model.SetTransmissionSuccess(task, "")
+	fmt.Println("Success")
 }
 
 func NewPingProtocol(model *model.Model) *PingProtocol {

@@ -259,7 +259,7 @@ func (s ApiService) queueDataTransmission(rawDataId uint64) {
 			RawDataId:			rawDataId, 
 			RelayStationId:	sta.Id, 
 			Code:						0, 
-			Error:					"", 
+			Info:						"", 
 			Status:					"Pending", 
 		}
 		s.model.DB.Save(&trx)

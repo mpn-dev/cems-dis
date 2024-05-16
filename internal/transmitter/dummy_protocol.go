@@ -18,18 +18,15 @@ func dummySend() {
 			}
 		}
 	}
+	fmt.Println("")
 }
 
-func (d *DummyProtocol) Send(task model.Transmission, station model.RelayStation) {
-	task.Code = 0
-	task.Error = ""
-	task.Status = "Started"
-	d.model.DB.Save(&task)
-	fmt.Println("Transmitting data...")
+func (p *DummyProtocol) Send(task model.Transmission, station model.RelayStation) {
+	p.model.SetTransmissionStarted(task)
+	fmt.Println("Transmitting data using dummy protocol...")
 	dummySend()
-	fmt.Println("")
-	task.Status = "Success"
-	d.model.DB.Save(&task)
+	p.model.SetTransmissionSuccess(task, "")
+	fmt.Println("Success")
 }
 
 func NewDummyProtocol(model *model.Model) *DummyProtocol {
