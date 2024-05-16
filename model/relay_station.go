@@ -2,6 +2,9 @@ package model
 
 import (
   "time"
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
+  "gorm.io/gorm"
 )
 
 type RelayStation struct {
@@ -9,6 +12,8 @@ type RelayStation struct {
   Name          string      `json:"name"        gorm:"size:30"`
   Protocol      string      `json:"protocol"    gorm:"size:30"`
   BaseURL       string      `json:"base_url"    gorm:"size:50"`
+  Username      string      `json:"username"    gorm:"size:30"`
+  Password      string      `json:"password"    gorm:"size:30"`
   Enabled       bool        `json:"enabled"`
   CreatedAt     time.Time   `json:"created_at"  gorm:"autoCreateTime"`
   UpdatedAt     time.Time   `json:"updated_at"  gorm:"autoUpdateTime"`
@@ -26,4 +31,16 @@ func (s *RelayStation) Out() *RelayStationOut {
     CreatedAt:    s.CreatedAt.Format(DEFAULT_DATE_TIME_FORMAT), 
     UpdatedAt:    s.UpdatedAt.Format(DEFAULT_DATE_TIME_FORMAT), 
   }
+}
+
+func (m *Model) GetRelayStationById(id int64) (*RelayStation, error) {
+  station := &RelayStation{}
+  if err := m.DB.Model(station).First(station, id).Error; err != nil {
+    if errors.Is(err, gorm.ErrRecordNotFound) {
+      return nil, nil
+    }
+    log.Warningf("DB error: %s", err.Error())
+    return nil, errors.New("DB error")
+  }
+  return station, nil
 }
