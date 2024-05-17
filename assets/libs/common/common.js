@@ -21,10 +21,21 @@ function strToUtcTimestamp(value) {
 }
 
 function utcTimestampToStr(epoch) {
+  if(epoch == null) {
+    return null;
+  }
   var d0 = (new Date(epoch * 1000));
   var xx = epoch - (d0.getTimezoneOffset() * 60);
   var d1 = (new Date((epoch - (d0.getTimezoneOffset() * 60)) * 1000));
   return d1.toISOString().replace('T', ' ');
+}
+
+function epochToDate(epoch) {
+  var str = utcTimestampToStr(epoch);
+  if(str == null) {
+    return str;
+  }
+  return str.substring(0, 19);
 }
 
 function getDateRange(datepicker1, datepicker2, name1, name2, allowEmpty = false) {

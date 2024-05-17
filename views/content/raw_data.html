@@ -185,6 +185,8 @@
             export_date_start.value(initDate);
             export_date_end.value(initDate);
 
+            $scope.epochToDate = epochToDate;
+
             $scope.alertError = function(resp) {
               $scope.isBusy = false;
               defaultErrorHandler(resp);
@@ -195,10 +197,6 @@
                 .map(function(f){return obj[f];})
                 .filter(function(o){return o;})
                 .join(char);
-            }
-
-            $scope.epochToDate = function(epoch) {
-              return utcTimestampToStr(epoch).substring(0, 19);
             }
 
             $scope.resetDevicePage = function() {

@@ -8,20 +8,20 @@ import (
 )
 
 type RawData struct {
-  Id                  uint64      `gorm:"primaryKey"`
-  DEV                 string      `gorm:"column:uid;size:32;index"`
-  Timestamp           uint64
-  SO2                 *float64
-  NOX                 *float64
-  PM                  *float64
-  H2S                 *float64    `gorm:"column:h2s"`
-  Opacity             *float64
-  Flow                *float64
-  O2                  *float64
-  Temperature         *float64
-  Pressure            *float64
-  CreatedAt           time.Time   `gorm:"autoCreateTime"`
-  UpdatedAt           time.Time   `gorm:"autoUpdateTime"`
+  Id                  uint64      `json:"id"          gorm:"primaryKey"`
+  DEV                 string      `json:"uid"         gorm:"column:uid;size:32;index"`
+  Timestamp           uint64      `json:"timestamp"`
+  SO2                 *float64    `json:"so2"`
+  NOX                 *float64    `json:"nox"`
+  PM                  *float64    `json:"pm"`
+  H2S                 *float64    `json:"h2s"         gorm:"column:h2s"`
+  Opacity             *float64    `json:"opacity"`
+  Flow                *float64    `json:"flow"`
+  O2                  *float64    `json:"o2"`
+  Temperature         *float64    `json:"temperature"`
+  Pressure            *float64    `json:"pressure"`
+  CreatedAt           time.Time   `json:"created_at"  gorm:"autoCreateTime"`
+  UpdatedAt           time.Time   `json:"updated_at"  gorm:"autoUpdateTime"`
 }
 
 type RawDataIn struct {

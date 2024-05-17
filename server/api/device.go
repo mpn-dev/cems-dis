@@ -124,8 +124,8 @@ func (s ApiService) getDeviceFromUrl(c *gin.Context) rs.Response {
 	if err != nil {
 		return rs.Error(http.StatusBadRequest, err.Error())
 	}
-	device, err := s.model.GetDeviceByUid(uid)
-	if err != nil {
+	device, _ := s.model.GetDeviceByUid(uid)
+	if device == nil {
 		return rs.Error(http.StatusNotFound, err.Error())
 	}
 	return rs.Success(device)
