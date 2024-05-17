@@ -14,6 +14,7 @@ import (
   "cems-dis/model"
   "cems-dis/server/api"
   "cems-dis/server/response"
+  "cems-dis/server/middleware"
   "cems-dis/server/web"
 )
 
@@ -57,17 +58,10 @@ func registerApiRoutes(engine *gin.Engine, model *model.Model) {
   g.GET("/relay-stations/:id", j(api.ApiService.GetRelayStation))
   g.PATCH("/relay-stations/:id", j(api.ApiService.UpdateRelayStation))
   g.DELETE("/relay-stations/:id", j(api.ApiService.DeleteRelayStation))
-  
-  g.POST("/cems/login", j(api.ApiService.DasLogin))
-  g.POST("/cems/refresh-token", j(api.ApiService.DasRefreshToken))
-  g.POST("/cems/push-data", j(api.ApiService.DasReceiveData))
-  g.GET("/cems/records", j(api.ApiService.ListRawData))
-  g.GET("/cems/records/:id", j(api.ApiService.GetRawDataById))
 
-  // compatibility support for cems das-data
-  g.POST("/pengiriman-das", j(api.ApiService.DasReceiveData))
+  g.GET("/pengiriman-das", j(api.ApiService.ListRawData))
+  g.POST("/pengiriman-das", middleware.TokenAuthMiddleware, j(api.ApiService.DasReceiveData))
   g.POST("/pengiriman-das/login", j(api.ApiService.DasLoginByUid))
-  g.POST("/pengiriman-das/refresh-token", j(api.ApiService.DasRefreshToken))
 }
 
 func registerWebRoutes(engine *gin.Engine, model *model.Model) {
