@@ -51,12 +51,17 @@ func (m migration) initRawData() {
   m.createTable("cems_records", &RawData{})
 }
 
+func (m migration) initPushRequest() {
+  m.createTable("push_requests", &PushRequest{})
+}
+
 func (m migration) Run() {
   m.initDevices()
   m.initRelayStations()
   m.initDeviceTokens()
   m.initTransmissions()
   m.initRawData()
+  m.initPushRequest()
 }
 
 func newMigration(db *gorm.DB) migration {

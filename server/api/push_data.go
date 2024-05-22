@@ -1,7 +1,9 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -18,43 +20,78 @@ import (
 
 
 func (s ApiService) DasReceiveData(c *gin.Context) rs.Response {
+	handler := func(svc ApiService, pr *model.PushRequest, devToken *model.DeviceToken) rs.Response {
+		setErr := func(r *model.PushRequest, code int, msg string) rs.Response {
+			r.Status = "Error"
+			r.Info = msg
+			return rs.Error(code, msg)
+		}
+
+		bodyRaw, err := io.ReadAll(c.Request.Body)
+		if err != nil {
+			return setErr(pr, http.StatusBadRequest, "Error reading request body")
+		}
+
+		pr.Request = string(bodyRaw)
+		device, err := s.model.GetDeviceByUid(devToken.DEV)
+		if err != nil {
+			return setErr(pr, http.StatusInternalServerError, err.Error())
+		} else if device == nil {
+			return setErr(pr, http.StatusBadRequest, "Device untuk bearer token tersebut tidak ada di database")
+		}
+
+		request := &model.RawDataIn{}
+		if err := json.Unmarshal(bodyRaw, request); err != nil {
+			return setErr(pr, http.StatusBadRequest, "Invalid JSON body")
+		} else if request.Timestamp == 0 {
+			return setErr(pr, http.StatusBadRequest, "Timestamp tidak valid")
+		}
+
+		record := model.NewRawData(device.UID, request)
+		existing := &model.RawData{}
+		s.model.DB.Model(existing).
+			Where("(uid = ?) AND (timestamp = ?)", record.DEV, record.Timestamp).
+			First(existing)
+		if existing.Id == 0 {
+			err = s.model.DB.Create(record).Error
+		} else {
+			existing.Update(record)
+			record = existing
+			err = s.model.DB.Save(record).Error
+		}
+
+		if err != nil {
+			log.Warningf(fmt.Sprintf("DB error: %s", errors.WithStack(err)))
+			return setErr(pr, http.StatusInternalServerError, "DB error")
+		}
+
+		s.queueDataTransmission(record.Id);
+
+		pr.Status = "Success"
+		return rs.New(201, nil, record.Out()).UseDasFormatter()
+	}
+
 	token := utils.ParseBearerToken(c.GetHeader("Authorization"))
 	deviceToken, _ := s.model.GetDeviceToken(token)
-	device, err := s.model.GetDeviceByUid(deviceToken.DEV)
-	if err != nil {
-		return rs.Error(http.StatusInternalServerError, err.Error())
-	} else if device == nil {
-		return rs.Error(http.StatusBadRequest, "Device untuk bearer token tersebut tidak ada di database")
+	pushRequest := &model.PushRequest{
+		IpAddr: 		c.ClientIP(), 
+		UserAgent:	c.Request.UserAgent(), 
+		DEV: 				deviceToken.DEV, 
+		Request:		"", 
+		Status:			"", 
+		Info:				"", 
 	}
 
-	request := &model.RawDataIn{}
-	if err := c.BindJSON(request); err != nil {
-		return rs.Error(http.StatusBadRequest, "Invalid JSON body")
-	} else if request.Timestamp == 0 {
-		return rs.Error(http.StatusBadRequest, "Timestamp tidak valid")
-	}
-
-	record := model.NewRawData(device.UID, request)
-	existing := &model.RawData{}
-	s.model.DB.Model(existing).
-		Where("(uid = ?) AND (timestamp = ?)", record.DEV, record.Timestamp).
-		First(existing)
-	if existing.Id == 0 {
-		err = s.model.DB.Create(record).Error
-	} else {
-		existing.Update(record)
-		record = existing
-		err = s.model.DB.Save(record).Error
-	}
-
-	if err != nil {
-		log.Warningf(fmt.Sprintf("DB error: %s", errors.WithStack(err)))
+	if err := s.model.DB.Save(pushRequest).Error; err != nil {
+		log.Warningf("DB error: %s", err.Error())
 		return rs.Error(http.StatusInternalServerError, "DB error")
 	}
 
-	s.queueDataTransmission(record.Id);
-
-	return rs.Success(record.Out())
+	res := handler(s, pushRequest, deviceToken)
+	if err := s.model.DB.Save(pushRequest).Error; err != nil {
+		log.Warningf("DB error: %s", err.Error())
+	}
+	return res
 }
 
 func (s ApiService) DasRelayData(d *model.RawData) error {
@@ -176,11 +213,15 @@ func (s ApiService) queueDataTransmission(rawDataId uint64) {
 	}
 	for _, sta := range stations {
 		trx := model.Transmission{
-			RawDataId:			rawDataId, 
-			RelayStationId:	sta.Id, 
-			Code:						0, 
-			Info:						"", 
-			Status:					"Pending", 
+			RawDataId:	rawDataId, 
+			Station:		sta.Name, 
+			Protocol:		sta.Protocol, 
+			BaseURL: 		sta.BaseURL, 
+			Username:		sta.Username, 
+			Password: 	sta.Password, 
+			Code:				0, 
+			Note:				"", 
+			Status:			"Pending", 
 		}
 		s.model.DB.Save(&trx)
 	}
