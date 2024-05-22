@@ -16,6 +16,10 @@ func (s ApiService) ListTransmissions(c *gin.Context) rs.Response {
 	ts_1, _ := strconv.ParseInt(c.Query("ts1"), 10, 64)
 	ts_2, _ := strconv.ParseInt(c.Query("ts2"), 10, 64)
 	sql := s.model.DB.Model(&model.Transmission{})
+	sql = model.SetSearchKeywords(
+		sql, 
+		[]string{"station", "protocol", "base_url", "username", "password", "status", "note"}, 
+		c.Query("q"))
 
 	if (ts_1 > 0) || (ts_2 > 0) {
 		if ts_2 < ts_1 {
@@ -32,7 +36,7 @@ func (s ApiService) ListTransmissions(c *gin.Context) rs.Response {
 	}
 
 	var transmissions []*model.Transmission
-	if err := paging.Sql().Order("updated_at DESC").Find(&transmissions).Error; err != nil {
+	if err := paging.Sql().Order("created_at DESC").Find(&transmissions).Error; err != nil {
 		log.Warningf("DB error: %s", err.Error())
 		return rs.Error(http.StatusInternalServerError, "DB error")
 	}

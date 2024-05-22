@@ -28,7 +28,7 @@ func (s ApiService) ListRelayStation(c *gin.Context) rs.Response {
 		return rs.Error(http.StatusBadRequest, err.Error())
 	}
 	var stations []*model.RelayStation
-	if err := paging.Sql().Find(&stations).Error; err != nil {
+	if err := paging.Sql().Order("name").Find(&stations).Error; err != nil {
 		log.Warningf("DB error: %s", err.Error())
 		return rs.Error(http.StatusInternalServerError, "DB error")
 	}

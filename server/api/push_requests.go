@@ -33,7 +33,7 @@ func (s ApiService) ListPushRequests(c *gin.Context) rs.Response {
 	}
 
 	var requests []*model.PushRequest
-	if err := paging.Sql().Find(&requests).Error; err != nil {
+	if err := paging.Sql().Order("created_at DESC").Find(&requests).Error; err != nil {
 		log.Warningf("DB error: %s", err.Error())
 		return rs.Error(http.StatusInternalServerError, "DB error")
 	}
