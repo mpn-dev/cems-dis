@@ -7,16 +7,20 @@ import (
 type Transmission struct {
 	Id							uint64				`json:"id"								gorm:"primaryKey"`
 	RawDataId				uint64				`json:"raw_data_id"				gorm:"index"`
-	RelayStationId	int64					`json:"relay_station_id"	gorm:"index"`
+	Station					string				`json:"station"						gorm:"size:30;index"`
+	Protocol				string				`json:"protocol"					gorm:"size:30;index"`
+	BaseURL					string				`json:"base_url"					gorm:"size:50;index"`
+	Username				string				`json:"username"					gorm:"size:30;index"`
+	Password				string				`json:"password"					gorm:"size:30;index"`
 	Code						int						`json:"code"							gorm:"index"`
-	Info						string				`json:"info"							gorm:"size:100"`
 	Status					string				`json:"status"						gorm:"size:20"`
-	CreatedAt				time.Time			`													gorm:"autoCreateTime"`
-	UpdatedAt				time.Time			`													gorm:"autoUpdateTime"`
+	Note						string				`json:"note"							gorm:"size:100"`
+	CreatedAt				time.Time			`json:"created_at"				gorm:"autoCreateTime"`
+	UpdatedAt				time.Time			`json:"updated_at"				gorm:"autoUpdateTime"`
 }
 
 type TransmissionOut struct {
-	Transmission 		Transmission
+	Transmission
 	CreatedAt				string				`json:"created_at"`
 	UpdatedAt				string				`json:"updated_at"`
 }
@@ -35,30 +39,30 @@ func SupportedRelayProtocols() []string {
 }
 
 
-func (m *Model) SetTransmissionPending(task Transmission) {
+func (m *Model) SetTransmissionPending(task *Transmission) {
 	task.Code = 0
-	task.Info = ""
+	task.Note = ""
 	task.Status = "Started"
 	m.DB.Save(&task)
 }
 
-func (m *Model) SetTransmissionStarted(task Transmission) {
+func (m *Model) SetTransmissionStarted(task *Transmission) {
 	task.Code = 0
-	task.Info = ""
+	task.Note = ""
 	task.Status = "Started"
 	m.DB.Save(&task)
 }
 
-func (m *Model) SetTransmissionSuccess(task Transmission, info string) {
-	task.Code = 200
-	task.Info = info
+func (m *Model) SetTransmissionSuccess(task *Transmission, code int, note string) {
+	task.Code = code
+	task.Note = note
 	task.Status = "Success"
 	m.DB.Save(&task)
 }
 
-func (m *Model) SetTransmissionError(task Transmission, code int, error string) {
+func (m *Model) SetTransmissionError(task *Transmission, code int, error string) {
 	task.Code = code
-	task.Info = error
+	task.Note = error
 	task.Status = "Error"
 	m.DB.Save(&task)
 }
