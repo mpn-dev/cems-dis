@@ -1,6 +1,7 @@
 package middleware
 
 import (
+  "fmt"
   "net/http"
   "time"
   "github.com/gin-gonic/gin"
@@ -22,6 +23,7 @@ func TokenAuthMiddleware(c *gin.Context) {
   }
   
   token := utils.ParseBearerToken(c.GetHeader("Authorization"))
+fmt.Printf("token: '%s'\n", token)
   if len(token) == 0 {
     reject(c, rs.Error(http.StatusBadRequest, "Missing bearer token"))
     return
@@ -34,7 +36,7 @@ func TokenAuthMiddleware(c *gin.Context) {
   } else if deviceToken == nil {
     reject(c, rs.Error(http.StatusBadRequest, "Akses token tidak valid"))
     return
-  } else if deviceToken.RefreshExpiredAt.Before(time.Now()) {
+  } else if deviceToken.LoginExpiredAt.Before(time.Now()) {
 		reject(c, rs.Error(http.StatusBadRequest, "Akses token expired"))
     return
 	}
