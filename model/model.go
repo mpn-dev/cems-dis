@@ -10,6 +10,7 @@ import (
   log "github.com/sirupsen/logrus"
   "golang.org/x/crypto/bcrypt"
   "gorm.io/gorm"
+  "gorm.io/gorm/logger"
   "gorm.io/driver/postgres"
 
   "cems-dis/config"
@@ -63,7 +64,14 @@ func SetSearchKeywords(sql *gorm.DB, fields []string, keywords string) *gorm.DB 
 func New() (*Model, error) {
   if model == nil {
     url := config.DbConfig().String()
-    db, err := gorm.Open(postgres.Open(url), &gorm.Config{})
+    logLevel := logger.Silent
+    if config.IsDBLoggerEnabled() {
+      logLevel = logger.Error
+    }
+    db, err := gorm.Open(postgres.Open(url), &gorm.Config{
+      Logger: logger.Default.LogMode(logLevel), 
+    })
+
     if err != nil {
       log.Warningf("Error connecting to database: %s", err)
       return nil, err
