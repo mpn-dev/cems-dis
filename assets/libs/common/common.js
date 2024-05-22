@@ -72,10 +72,12 @@ function defaultErrorHandler(resp) {
   responses.forEach(function(r) {
     if(r.status != 200) {
       var errmsg = "Unknown error occured";
-      if(typeof r.data === 'string' || r.data instanceof String)
+      if(typeof r.data === 'string' || r.data instanceof String) {
         errmsg = r.data;
-      else if("error" in r.data) {
-        errmsg = r.data.error;
+      } else if("meta" in r.data) {
+        if("errors" in r.data.meta) {
+          errmsg = r.data.meta.errors[0];
+        }
       }
       window.alert("Error " + r.status + ": " + errmsg);
       return;

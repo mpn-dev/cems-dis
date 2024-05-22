@@ -23,7 +23,7 @@ func (s ApiService) ListRelayStation(c *gin.Context) rs.Response {
 	size, _ := strconv.Atoi(c.Param("size"))
 	sql := s.model.DB.Model(&model.RelayStation{})
 	sql = model.SetSearchKeywords(sql, []string{"name", "protocol"}, c.Param("q"))
-	paging, err := rs.NewPagingFormatter(sql, page, size)
+	paging, err := rs.NewPaging(sql, page, size)
 	if err != nil {
 		return rs.Error(http.StatusBadRequest, err.Error())
 	}
@@ -36,7 +36,7 @@ func (s ApiService) ListRelayStation(c *gin.Context) rs.Response {
 	for _, r := range stations {
 		list = append(list, r.Out())
 	}
-	return rs.Success(list).UseFormatter(paging)
+	return rs.Success(list).DefaultWithPaging(paging)
 }
 
 func (s ApiService) GetRelayStation(c *gin.Context) rs.Response {

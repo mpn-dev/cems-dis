@@ -19,9 +19,8 @@ import (
 func (s ApiService) ListDevices(c *gin.Context) rs.Response {
 	var devices []model.Device
 
-	page, _ := strconv.ParseInt(c.Query("page"), 10, 64)
-	size, _ := strconv.ParseInt(c.Query("size"), 10, 64)
-
+	page, _ := strconv.Atoi(c.Query("page"))
+	size, _ := strconv.Atoi(c.Query("size"))
 	sql := s.model.DB.Model(&model.Device{}).Order("name")
 	sql = model.SetSearchKeywords(sql, []string{"uid", "name", "api_key", "secret"}, c.Query("q"))
 
@@ -29,7 +28,7 @@ func (s ApiService) ListDevices(c *gin.Context) rs.Response {
 		sql.Where("(enabled = ?)", false)
 	}
 
-	paging, err := rs.NewPagingFormatter(sql, int(size), int(page))
+	paging, err := rs.NewPaging(sql, int(page), int(size))
 	if err != nil {
 		return rs.Error(http.StatusInternalServerError, err.Error())
 	}
@@ -41,7 +40,7 @@ func (s ApiService) ListDevices(c *gin.Context) rs.Response {
 	for _, d := range devices {
 		list = append(list, d.Out())
 	}
-	return rs.Success(list).UseFormatter(paging)
+	return rs.Success(list).DefaultWithPaging(paging)
 }
 
 func (s ApiService) GetDevice(c *gin.Context) rs.Response {

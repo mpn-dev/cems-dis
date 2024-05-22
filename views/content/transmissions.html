@@ -1,0 +1,123 @@
+<% template "admin.html" . %>
+<% define "title" %>Transmissions<% end %>
+<% define "content" %>
+        <div class="row justify-content-between pb-2">
+          <div class="col-12 col-lg-3">
+            <div class="title1a text-nowrap"><% block "title" . %><% end %></div>
+          </div>
+          <div class="col-12 col-lg-9 pr-1">
+            <div class="row justify-content-start justify-content-lg-end mx-0">
+              <div class="d-flex" style="width: 185px; margin-top: 2px;">
+                <label class="pt-1" style="width: 50px;">Mulai</label>
+                <input class="mx-0" id="push-date-start" width="124" value="<% .date_min %>"/>
+              </div>
+              <div class="d-flex" style="width: 185px; margin-top: 2px;">
+                <label class="pt-1" style="width: 50px;">Sampai</label>
+                <input class="mx-0" id="push-date-end" width="124" value="<% .date_max %>" />
+              </div>
+              <div style="width: 220px;">
+                <div class="input-group float-md-right pt-1" style="width: 218px;">
+                  <form>
+                    <input type="text" class="input-sm" ng-model="searchKeywords" ng-change="resetPage()" placeholder="Search keywords"></input>
+                    <div class="btn-group float-right">
+                      <button type="submit" class="btn btn-sm btn-outline" ng-click="loadTransmissionList()"><i class="fa fa-refresh" title="Refresh"></i></button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row" ng-show="isBusy">
+          <div class="col-12">
+            <div class="spinner-border text-primary" style="position: absolute; top: 220px; left: 50%; width: 50px; height: 50px;"></div>
+          </div>
+        </div>
+
+        <table class="normal full highlight-row">
+        <tr>
+          <th>ID</th>
+          <th>Data ID</th>
+          <th>Relay Station</th>
+          <th>Protocol</th>
+          <th>URL</th>
+          <th>Username</th>
+          <th>Password</th>
+          <th>Code</th>
+          <th>Status</th>
+          <th>Note</th>
+          <th width="140px">Created At</th>
+          <th width="140px">Updated At</th>
+        </tr>
+        <tr ng-repeat="t in transmissionList track by $index">
+          <td>{{t.id}}</td>
+          <td>{{t.raw_data_id}}</td>
+          <td>{{t.station}}</td>
+          <td>{{t.protocol}}</td>
+          <td>{{t.base_url}}</td>
+          <td>{{t.username}}</td>
+          <td>{{t.password}}</td>
+          <td>{{t.code}}</td>
+          <td>{{t.status}}</td>
+          <td style="word-wrap: break-word; word-break: break-all;">{{t.note}}</td>
+          <td>{{t.created_at}}</td>
+          <td>{{t.updated_at}}</td>
+        </tr>
+        </table>
+
+        <div class="row table-footer justify-content-between">
+          <div class="col"><div id="transmission-paging"></div></div>
+          <div class="col align-right text-nowrap">{{cntShownTransmission}} / {{cntTotalTransmission}}</div>
+        </div>
+
+        <div id="message-box"></div>
+
+
+        <script>
+          mainApp.controller('wmCtrl', function($scope, $http, $q) {
+            var initDate = (new Date()).toISOString().substr(0, 10);
+            var pushDateStart = $('#push-date-start').datepicker({uiLibrary: 'bootstrap4', size: 'small', format: 'yyyy-mm-dd', value: initDate});
+            var pushDateEnd = $('#push-date-end').datepicker({uiLibrary: 'bootstrap4', size: 'small', format: 'yyyy-mm-dd', value: initDate});
+
+            $scope.resetPage = function() {
+              $scope.transmissionPage = 1;
+            }
+
+            $scope.loadTransmissionList = function() {
+              var range = getDateRange(pushDateStart, pushDateEnd, "Tanggal awal", "Tanggal akhir", true);
+              if(range instanceof Error) {
+                window.alert(range.message);
+                return;
+              }
+
+              var keywords = $scope.searchKeywords ? $scope.searchKeywords : "";
+              var timeRange = range != null ? "&ts1=" + range.start + "&ts2=" + range.end : ""
+              var page = $scope.transmissionPage ? $scope.transmissionPage : 1;
+              var url = "/api/v1/transmissions?page=" + page + timeRange + "&q=" + keywords;
+              $scope.isBusy = true;
+              $http.get(url, requestConfig()).then(
+                function(response) {
+                  $scope.transmissionList     = response.data.data;
+                  $scope.transmissionPage     = response.data.meta.pagination.page;
+                  $scope.cntShownTransmission = $scope.transmissionList.length;
+                  $scope.cntTotalTransmission = response.data.meta.pagination.rows;
+                  $scope.isBusy = false;
+                  paging(document.getElementById("transmission-paging"), $scope.transmissionPage, response.data.meta.pagination.pages, 7, $scope.clkTransmissionPage, defaultPagingOptions());
+                }
+              )
+            }
+
+            $scope.clkTransmissionPage = function(page) {
+              $scope.transmissionPage = page;
+              $scope.loadTransmissionList();
+            }
+
+            $scope.clkRefresh = function() {
+              $scope.loadTransmissionList();
+            }
+
+            $scope.loadTransmissionList();
+          });
+        </script>
+<% end %>
