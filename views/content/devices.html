@@ -34,7 +34,7 @@
               <th>Created</th>
               <th class="text-center">Action</th>
             </tr>
-            <tr style="background-color: {{deviceRowColor(h)}};" ng-repeat="h in devices">
+            <tr style="background-color: {{deviceRowColor(h)}};" ng-repeat="h in deviceList">
               <td>{{h.uid}}</td>
               <td>{{h.name}}</td>
               <td>{{h.latitude}}</td>
@@ -52,7 +52,7 @@
 
           <div class="row table-footer justify-content-between">
             <div class="col"><div id="device-paging"></div></div>
-            <div class="col align-right text-nowrap">{{cntShown}} / {{cntDevice}}</div>
+            <div class="col align-right text-nowrap">{{cntShownDevice}} / {{cntTotalDevice}}</div>
           </div>
         </span>
 
@@ -146,11 +146,11 @@
 
               $http.get("/api/v1/devices?" + params.join("&"), requestConfig()).then(
                 function(response){
-                  $scope.devices      = response.data.data;
-                  $scope.devicePage   = response.data.page;
-                  $scope.cntDevice    = response.data.rows;
-                  $scope.cntShown     = $scope.devices.length;
-                  paging(document.getElementById("device-paging"), $scope.devicePage, response.data.pages, 7, $scope.clkDevicePage, defaultPagingOptions());
+                  $scope.deviceList     = response.data.data;
+                  $scope.devicePage     = response.data.meta.pagination.page;
+                  $scope.cntShownDevice = $scope.deviceList.length;
+                  $scope.cntTotalDevice = response.data.meta.pagination.rows;
+                  paging(document.getElementById("device-paging"), $scope.devicePage, response.data.meta.pagination.pages, 7, $scope.clkDevicePage, defaultPagingOptions());
                 }, 
                 defaultErrorHandler
               );

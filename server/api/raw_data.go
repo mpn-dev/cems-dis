@@ -52,9 +52,9 @@ func (s ApiService) ListRawData(c *gin.Context) rs.Response {
 		sql = sql.Where("(timestamp <= ?)", ts2)
 	}
 
-	paging, err := rs.NewPagingFormatter(sql, size, page)
+	paging, err := rs.NewPaging(sql, page, size)
 	if err != nil {
-		return rs.Error(http.StatusInternalServerError, "DB error")
+		return rs.Error(http.StatusInternalServerError, err.Error())
 	}
 	var records []*model.RawData
 	if err = paging.Sql().Find(&records).Error; err != nil {
@@ -64,7 +64,7 @@ func (s ApiService) ListRawData(c *gin.Context) rs.Response {
 	for _, r := range records {
 		list = append(list, r.Out())
 	}
-	return rs.Success(list).UseFormatter(paging)
+	return rs.Success(list).DefaultWithPaging(paging)
 }
 
 func (s ApiService) ListEmissionData(c *gin.Context) rs.Response {
