@@ -12,12 +12,12 @@ func Ping(c *gin.Context) {
   c.Data(http.StatusOK, "text/plain", []byte("PONG"))
 }
 
-func Device(c *gin.Context) {
-	handlePageByMenu(c, "device", "device.html", nil)
+func Devices(c *gin.Context) {
+	handlePageByMenu(c, "devices", "devices.html", nil)
 }
 
-func RelayStation(c *gin.Context) {
-	handlePageByMenu(c, "relay-station", "relay_station.html", nil)
+func RelayStations(c *gin.Context) {
+	handlePageByMenu(c, "relay-stations", "relay_stations.html", nil)
 }
 
 func RawData(c *gin.Context) {
@@ -32,8 +32,12 @@ func PercentageData(c *gin.Context) {
 	handlePageByMenu(c, "percentage-data", "percentage_data.html", nil)
 }
 
-func PushRequest(c *gin.Context) {
-	handlePageByMenu(c, "push-request", "push_request.html", nil)
+func Transmissions(c *gin.Context) {
+	handlePageByMenu(c, "transmissions", "transmissions.html", nil)
+}
+
+func PushRequests(c *gin.Context) {
+	handlePageByMenu(c, "push-requests", "push_requests.html", nil)
 }
 
 func Dashboard(c *gin.Context) {
