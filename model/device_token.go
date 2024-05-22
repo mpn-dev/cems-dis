@@ -40,8 +40,7 @@ func (m *Model) GetDeviceToken(token string) (*DeviceToken, error) {
 }
 
 func (m *Model) CreateDeviceLoginToken(uid string) (*DeviceToken, error) {
-  m.DB.Model(&DeviceToken{}).Where("(uid = ?) AND ((login_expired_at = ?) OR (login_expired_at > ?))", uid, nil, time.Now()).
-    Update("login_expired_at", time.Now())
+  m.DB.Where("login_expired_at < current_timestamp").Delete(&DeviceToken{})
   m.DB.Model(&DeviceToken{}).Where("(uid = ?) AND ((refresh_expired_at = ?) OR (refresh_expired_at > ?))", uid, nil, time.Now()).
     Update("refresh_expired_at", time.Now())
   token := &DeviceToken{
