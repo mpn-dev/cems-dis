@@ -284,7 +284,7 @@
               var range = getDateRange(record_date_start, record_date_end, "Tanggal awal", "Tanggal akhir", true);
 
               $scope.ftab = "list";
-              $scope.logsPage = {};
+              $scope.logsPage = 1;
 
               if(range instanceof Error) {
                 window.alert(range.message);
