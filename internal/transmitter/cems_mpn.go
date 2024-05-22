@@ -35,12 +35,12 @@ type CemsMpnProtocol struct {
 	model *model.Model
 }
 
-func (p *CemsMpnProtocol) cemsMpnLogin(station model.RelayStation) (*tokens.LoginToken, error) {
-	url := fmt.Sprintf("%s/api/v1/users/login", station.BaseURL)
+func (p *CemsMpnProtocol) cemsMpnLogin(task *model.Transmission) (*tokens.LoginToken, error) {
+	url := fmt.Sprintf("%s/api/v1/users/login", task.BaseURL)
 	var body []byte
 	payload := map[string]string{
-		"user_id": 	station.Username, 
-		"password":	station.Password, 
+		"user_id": 	task.Username, 
+		"password":	task.Password, 
 	}
 	body, _ = json.Marshal(payload)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
@@ -70,45 +70,41 @@ func (p *CemsMpnProtocol) cemsMpnLogin(station model.RelayStation) (*tokens.Logi
 		log.Warningf("cems_mpn.Login => Error: %s", loginResp.Error)
 		return nil, errors.New(*loginResp.Error)
 	}
-	token := tokens.RegisterToken(station.Protocol, station.BaseURL, loginResp.Login.Token, "", loginResp.Login.TokenTTL - 5)
+	token := tokens.RegisterToken(task.Protocol, task.BaseURL, loginResp.Login.Token, "", loginResp.Login.TokenTTL - 5)
 	return token, nil
 }
 
-func (p *CemsMpnProtocol) cemsMpnGetToken(task model.Transmission, station model.RelayStation) (*tokens.LoginToken, error) {
-	token := tokens.FindToken(station.Protocol, station.BaseURL)
+func (p *CemsMpnProtocol) cemsMpnGetToken(task *model.Transmission) (*tokens.LoginToken, error) {
+	token := tokens.FindToken(task.Protocol, task.BaseURL)
 	if token == nil {
-		return p.cemsMpnLogin(station)
+		return p.cemsMpnLogin(task)
 	}
 	if token.IsExpired() {
-		return p.cemsMpnLogin(station)
+		return p.cemsMpnLogin(task)
 	}
 	return token, nil
 }
 
-func (p *CemsMpnProtocol) Send(task model.Transmission, station model.RelayStation) {
+func (p *CemsMpnProtocol) Send(task *model.Transmission) Result {
 	record, _ := p.model.GetRawDataById(task.RawDataId)
 	if record == nil {
-		p.model.SetTransmissionError(task, 0, "Invalid raw data ID")
-		return
+		return Error(task, 0, "Invalid raw data ID")
 	}
 
-	p.model.SetTransmissionStarted(task)
-	token, err := p.cemsMpnGetToken(task, station)
+	token, err := p.cemsMpnGetToken(task)
 	if err != nil {
 		msg := fmt.Sprintf("Get token failed: %s", err.Error())
 		log.Warningf("cems_mpn.Send => %s", msg)
-		p.model.SetTransmissionError(task, 0, msg)
-		return
+		return Error(task, 0, msg)
 	}
 
-	url := fmt.Sprintf("%s/api/v1/cems/push", station.BaseURL)
+	url := fmt.Sprintf("%s/api/v1/cems/push", task.BaseURL)
 	var body []byte
 	body, _ = json.Marshal(record.CemsPayload())
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
 	if err != nil {
 		log.Warningf("cems_mpn.Send => Error: %s", err.Error())
-		p.model.SetTransmissionError(task, 0, err.Error())
-		return
+		return Error(task, 0, err.Error())
 	}
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-CSRF-TOKEN", token.GetAccessToken())
@@ -116,17 +112,15 @@ func (p *CemsMpnProtocol) Send(task model.Transmission, station model.RelayStati
 	res, err := client.Do(req)
 	if err != nil {
 		log.Warningf("cems_mpn.Send => Error: %s", err.Error())
-		p.model.SetTransmissionError(task, 0, err.Error())
-		return
+		return Error(task, 0, err.Error())
 	}
 	defer res.Body.Close()
 	res_body, _ := io.ReadAll(res.Body)
 	if res.StatusCode != 200 {
 		log.Warningf("cems_mpn.Send => Error %d", res.StatusCode)
-		p.model.SetTransmissionError(task, res.StatusCode, "Unknown error")
-		return
+		return Error(task, res.StatusCode, "Unknown error")
 	}
-	p.model.SetTransmissionSuccess(task, string(res_body))
+	return Success(task, 200, string(res_body))
 }
 
 func NewCemsMpnProtocol(model *model.Model) *CemsMpnProtocol {

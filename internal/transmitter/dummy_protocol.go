@@ -21,12 +21,11 @@ func dummySend() {
 	fmt.Println("")
 }
 
-func (p *DummyProtocol) Send(task model.Transmission, station model.RelayStation) {
-	p.model.SetTransmissionStarted(task)
+func (p *DummyProtocol) Send(task *model.Transmission) Result {
 	fmt.Println("Transmitting data using dummy protocol...")
 	dummySend()
-	p.model.SetTransmissionSuccess(task, "")
 	fmt.Println("Success")
+	return Success(task, 0, "")
 }
 
 func NewDummyProtocol(model *model.Model) *DummyProtocol {
