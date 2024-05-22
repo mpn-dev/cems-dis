@@ -13,6 +13,7 @@ type config struct {
   userLoginTokenAgeLong   int
   deviceLoginTokenAge     int
   deviceRefreshTokenAge   int
+  isDBLoggerEnabled       bool
 }
 
 var appConfig *config
@@ -35,6 +36,7 @@ func Load(file string) {
     userLoginTokenAgeLong:    getIntOrPanic("USER_LOGIN_TOKEN_AGE_LONG"), 
     deviceLoginTokenAge:      getIntOrPanic("DEVICE_LOGIN_TOKEN_AGE"), 
     deviceRefreshTokenAge:    getIntOrPanic("DEVICE_REFRESH_TOKEN_AGE"), 
+    isDBLoggerEnabled:        getBoolOrPanic("ENABLE_DB_LOGGER"), 
   }
 }
 
@@ -60,4 +62,8 @@ func DeviceLoginTokenAge() int {
 
 func DeviceRefreshTokenAge() int {
   return appConfig.deviceRefreshTokenAge
+}
+
+func IsDBLoggerEnabled() bool {
+  return appConfig.isDBLoggerEnabled
 }

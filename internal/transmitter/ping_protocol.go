@@ -31,12 +31,11 @@ func sendPing() {
 	fmt.Printf("body: %s\n", string(res_body))
 }
 
-func (p *PingProtocol) Send(task model.Transmission, station model.RelayStation) {
-	p.model.SetTransmissionStarted(task)
+func (p *PingProtocol) Send(task *model.Transmission) Result {
 	fmt.Println("Transmitting data using ping protocol...")
 	sendPing()
-	p.model.SetTransmissionSuccess(task, "")
 	fmt.Println("Success")
+	return Success(task, 200, "")
 }
 
 func NewPingProtocol(model *model.Model) *PingProtocol {

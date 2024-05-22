@@ -36,7 +36,7 @@
                 </div>
               </div>
             </div>
-            <div class="row mt-2 mb-4" ng-show="(selectedMode == 'chart') && (chartData.records.length > 0)">
+            <div class="row mt-2 mb-4" ng-show="(selectedMode == 'chart') && (chartData.length > 0)">
               <div class="col-12">
                 <ul class="ml-3">
                   <li>Chart hanya menampilkan maks. {{CHART_MAX_ROWS}} data</li>
@@ -67,13 +67,13 @@
           </div>
 
           <div class="mt-4" ng-show="ftab == 'list'">
-            <span ng-show="(selectedMode == 'table') && (tableData.records.length > 0)">
+            <span ng-show="(selectedMode == 'table') && (tableData.length > 0)">
               <table class="normal full highlight-row" >
                 <tr>
                   <th>Tanggal</th>
                   <th style="text-align: center" ng-repeat="s in sensors">{{s.name}}{{s.unit ? " (" + s.unit + ")" : ""}}</th>
                 </tr>
-                <tr ng-repeat="r in tableData.records">
+                <tr ng-repeat="r in tableData">
                   <td>{{epochToDate(r.timestamp)}}</td>
                   <td style="text-align: center" ng-repeat="s in sensors">{{r[s.code]}}</td>
                 </tr>
@@ -85,13 +85,13 @@
               </div>
             </span>
 
-            <div class="row mx-1 p-3 bg-light-gray" ng-show="(selectedMode == 'chart') && (chartData.records.length > 0)">
+            <div class="row mx-1 p-3 bg-light-gray" ng-show="(selectedMode == 'chart') && (chartData.length > 0)">
               <div class="col-lg-6 pb-3 chart-canvas chart-canvas-lg" ng-repeat="x in [].constructor(20) track by $index" ng-show="charts[$index]">
                 <canvas id="chart-{{$index + 1}}"></canvas>
               </div>
             </div>
 
-            <span ng-show="(tableData.records.length == 0) && (chartData.records.length == 0)">
+            <span ng-show="(tableData.length == 0) && (chartData.length == 0)">
               Tidak ada data untuk range waktu tersebut
             </span>
           </div>
@@ -166,8 +166,6 @@
               {code: "temperature", name: "Temperature",  unit: ""}, 
               {code: "pressure",    name: "Pressure",     unit: ""}, 
             ];
-            $scope.tableData = {records: [], page: 1, pages: 1, rows: 20};
-            $scope.chartData = {records: []};
             $scope.charts = [];
             $scope.device = {};
             $scope.devicePage = 1;
@@ -221,19 +219,19 @@
                 function(response) {
                   $scope.devices = response.data.data;
                   $scope.cntShownDevices = $scope.devices.length;
-                  $scope.cntTotalDevices = response.data.rows;
-                  paging(document.getElementById("devices-paging"), $scope.devicePage, $scope.devices.pages, 7, $scope.clkDevicePage, defaultPagingOptions());
+                  $scope.cntTotalDevices = response.data.meta.pagination.rows;
+                  paging(document.getElementById("devices-paging"), $scope.devicePage, response.data.meta.pagination.pages, 7, $scope.clkDevicePage, defaultPagingOptions());
                 }
               );
             }
 
             $scope.updateChart = function() {
               var lineColors = chartLineColors();
-              var labels = $scope.chartData.records.map(function(r) {return $scope.epochToDate(r.timestamp).substring(8, 16);}).reverse();
+              var labels = $scope.chartData.map(function(r) {return $scope.epochToDate(r.timestamp).substring(8, 16);}).reverse();
 
               for(var i = 0; i < $scope.sensors.length; i++) {
                 var ss = $scope.sensors[i];
-                var ds = $scope.chartData.records.map(function(r) {return r[ss.code];}).reverse();
+                var ds = $scope.chartData.map(function(r) {return r[ss.code];}).reverse();
                 var cv = document.getElementById("chart-" + (i + 1));
                 cv.style.backgroundColor = "#ffffff";
 
@@ -282,12 +280,11 @@
             }
 
             $scope.presentData = function() {
-              $scope.ftab = "list";
-              $scope.tableData = {records: [], page: 1, pages: 1, rows: 20};
-              $scope.chartData = {records: []};
-
               var options = [];
               var range = getDateRange(record_date_start, record_date_end, "Tanggal awal", "Tanggal akhir", true);
+
+              $scope.ftab = "list";
+              $scope.logsPage = 1;
 
               if(range instanceof Error) {
                 window.alert(range.message);
@@ -300,25 +297,20 @@
               }
 
               if($scope.selectedMode == "table") {
-                var page = "page" in $scope.tableData ? $scope.tableData.page : 1;
-                options.push("page=" + page);
+                options.push("page=" + $scope.logsPage);
                 var receive = function(response) {
-                  $scope.tableData = {
-                    records:  response.data.data, 
-                    page:     response.data.page, 
-                    pages:    response.data.pages, 
-                    rows:     response.data.rows, 
-                  }
-                  $scope.cntShownRecords = $scope.tableData.records.length;
-                  $scope.cntTotalRecords = $scope.tableData.rows;
-                  paging(document.getElementById("logs-paging"), $scope.tableData.page, $scope.tableData.pages, 7, $scope.clkLogsPage, defaultPagingOptions());
+                  $scope.tableData = response.data.data;
+                  $scope.logsPage = response.data.meta.pagination.page;
+                  $scope.cntShownRecords = $scope.tableData.length;
+                  $scope.cntTotalRecords = response.data.meta.pagination.rows;
+                  paging(document.getElementById("logs-paging"), $scope.logsPage, response.data.meta.pagination.pages, 7, $scope.clkLogsPage, defaultPagingOptions());
                 }
               }
 
               if($scope.selectedMode == "chart") {
                 options.push("size=" + CHART_MAX_ROWS);
                 var receive = function(response) {
-                  $scope.chartData.records = response.data.data;
+                  $scope.chartData = response.data.data;
                   $scope.updateChart();
                 }
               }
@@ -384,7 +376,7 @@
             }
 
             $scope.clkLogsPage = function(page) {
-              $scope.tableData.page = page;
+              $scope.logsPage = page;
               $scope.presentData();
             }
 

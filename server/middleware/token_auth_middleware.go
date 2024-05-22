@@ -34,7 +34,7 @@ func TokenAuthMiddleware(c *gin.Context) {
   } else if deviceToken == nil {
     reject(c, rs.Error(http.StatusBadRequest, "Akses token tidak valid"))
     return
-  } else if deviceToken.RefreshExpiredAt.Before(time.Now()) {
+  } else if deviceToken.LoginExpiredAt.Before(time.Now()) {
 		reject(c, rs.Error(http.StatusBadRequest, "Akses token expired"))
     return
 	}

@@ -27,7 +27,7 @@ type Server struct {
 
 func registerMiscRoutes(engine *gin.Engine, model *model.Model) {
   engine.GET("/", func(c *gin.Context) {
-    c.Redirect(http.StatusMovedPermanently, "/web/device")
+    c.Redirect(http.StatusMovedPermanently, "/web/devices")
   })
 
   engine.GET("/ping", web.Ping)
@@ -40,8 +40,8 @@ func registerApiRoutes(engine *gin.Engine, model *model.Model) {
       fn(s, c).Json(c)
     }
   }
-  g := engine.Group("api/v1")
 
+  g := engine.Group("api/v1")
   g.GET("/devices", j(api.ApiService.ListDevices))
   g.POST("/devices", j(api.ApiService.InsertDevice))
   g.GET("/devices/new-secret", j(api.ApiService.GenerateDeviceSecret))
@@ -59,20 +59,25 @@ func registerApiRoutes(engine *gin.Engine, model *model.Model) {
   g.PATCH("/relay-stations/:id", j(api.ApiService.UpdateRelayStation))
   g.DELETE("/relay-stations/:id", j(api.ApiService.DeleteRelayStation))
 
-  g.GET("/pengiriman-das", j(api.ApiService.ListRawData))
-  g.POST("/pengiriman-das", middleware.TokenAuthMiddleware, j(api.ApiService.DasReceiveData))
-  g.POST("/pengiriman-das/login", j(api.ApiService.DasLoginByUid))
+  g.GET("/push-requests", j(api.ApiService.ListPushRequests))
+
+  g.GET("/transmissions", j(api.ApiService.ListTransmissions))
+
+  d := engine.Group("pengiriman-das")
+  d.GET("", j(api.ApiService.ListRawData))
+  d.POST("", middleware.TokenAuthMiddleware, j(api.ApiService.DasReceiveData))
+  d.POST("/login", j(api.ApiService.DasLoginByUid))
 }
 
 func registerWebRoutes(engine *gin.Engine, model *model.Model) {
   g := engine.Group("web")
-  
-  g.GET("/device", web.Device)
-  g.GET("/relay-station", web.RelayStation)
+  g.GET("/devices", web.Devices)
+  g.GET("/relay-stations", web.RelayStations)
   g.GET("/raw-data", web.RawData)
   g.GET("/emission-data", web.EmissionData)
   g.GET("/percentage-data", web.PercentageData)
-  g.GET("/push-request", web.PushRequest)
+  g.GET("/transmissions", web.Transmissions)
+  g.GET("/push-requests", web.PushRequests)
   g.GET("/dashboard", web.Dashboard)
 }
 
@@ -89,9 +94,10 @@ func registerTemplates(engine *gin.Engine) {
     "raw_data.html":        []string{"views/content/raw_data.html", "views/layout/admin.html"}, 
     "emission_data.html":   []string{"views/content/emission_data.html", "views/layout/admin.html"}, 
     "percentage_data.html": []string{"views/content/percentage_data.html", "views/layout/admin.html"}, 
-    "push_request.html":    []string{"views/content/push_request.html", "views/layout/admin.html"}, 
-    "relay_station.html":   []string{"views/content/relay_station.html", "views/layout/admin.html"}, 
-    "device.html":          []string{"views/content/device.html", "views/layout/admin.html"}, 
+    "transmissions.html":   []string{"views/content/transmissions.html", "views/layout/admin.html"}, 
+    "push_requests.html":   []string{"views/content/push_requests.html", "views/layout/admin.html"}, 
+    "relay_stations.html":  []string{"views/content/relay_stations.html", "views/layout/admin.html"}, 
+    "devices.html":         []string{"views/content/devices.html", "views/layout/admin.html"}, 
   }
 
   // todo: reload templates if env == development

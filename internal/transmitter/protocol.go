@@ -5,5 +5,5 @@ import (
 )
 
 type Protocol interface {
-	Send(t model.Transmission, s model.RelayStation)
+	Send(t *model.Transmission) Result
 }

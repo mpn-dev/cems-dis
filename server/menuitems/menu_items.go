@@ -27,10 +27,11 @@ func allMenuItems() []menuItem {
     menuItem{name: "emission-data",     text: "Emission Data",          path: "/web/emission-data",     exts: ""}, 
     menuItem{name: "percentage-data",   text: "Percentage Data",        path: "/web/percentage-data",   exts: ""}, 
     menuItem{}, 
-    menuItem{name: "push-request",      text: "Push Request",           path: "/web/push-request",      exts: ""}, 
+    menuItem{name: "transmissions",     text: "Transmissions",          path: "/web/transmissions",     exts: ""}, 
+    menuItem{name: "push-requests",     text: "Push Requests",          path: "/web/push-requests",     exts: ""}, 
     menuItem{}, 
-    menuItem{name: "relay-station",     text: "Daftar Relay Station",   path: "/web/relay-station",     exts: ""}, 
-    menuItem{name: "device",            text: "Daftar Device",          path: "/web/device",            exts: ""}, 
+    menuItem{name: "relay-stations",    text: "Daftar Relay Station",   path: "/web/relay-stations",    exts: ""}, 
+    menuItem{name: "devices",           text: "Daftar Device",          path: "/web/devices",           exts: ""}, 
   }
 }
 

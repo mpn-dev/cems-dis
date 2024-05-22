@@ -33,7 +33,7 @@
               <th>Created</th>
               <th class="text-center">Action</th>
             </tr>
-            <tr ng-repeat="s in stations">
+            <tr ng-repeat="s in stationList">
               <td>{{s.name}}</td>
               <td>{{s.protocol}}</td>
               <td>{{s.base_url}}</td>
@@ -144,11 +144,11 @@
 
               $http.get("/api/v1/relay-stations?" + params.join("&"), requestConfig()).then(
                 function(response){
-                  $scope.stations         = response.data.data;
-                  $scope.stationPage      = response.data.page;
-                  $scope.cntTotalStation  = response.data.rows;
-                  $scope.cntShownStation  = $scope.stations.length;
-                  paging(document.getElementById("station-paging"), $scope.stationPage, response.data.pages, 7, $scope.clkStationPage, defaultPagingOptions());
+                  $scope.stationList      = response.data.data;
+                  $scope.stationPage      = response.data.meta.pagination.page;
+                  $scope.cntShownStation  = $scope.stationList.length;
+                  $scope.cntTotalStation  = response.data.meta.pagination.rows;
+                  paging(document.getElementById("station-paging"), $scope.stationPage, response.data.meta.pagination.pages, 7, $scope.clkStationPage, defaultPagingOptions());
                 }, 
                 defaultErrorHandler
               );
