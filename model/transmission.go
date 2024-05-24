@@ -5,18 +5,18 @@ import (
 )
 
 type Transmission struct {
-	Id							uint64				`json:"id"								gorm:"primaryKey"`
-	RawDataId				uint64				`json:"raw_data_id"				gorm:"index"`
-	Station					string				`json:"station"						gorm:"size:30;index"`
-	Protocol				string				`json:"protocol"					gorm:"size:30;index"`
-	BaseURL					string				`json:"base_url"					gorm:"size:50;index"`
-	Username				string				`json:"username"					gorm:"size:30;index"`
-	Password				string				`json:"password"					gorm:"size:30;index"`
-	Code						int						`json:"code"							gorm:"index"`
-	Status					string				`json:"status"						gorm:"size:20"`
-	Note						string				`json:"note"							gorm:"size:100"`
-	CreatedAt				time.Time			`json:"created_at"				gorm:"autoCreateTime"`
-	UpdatedAt				time.Time			`json:"updated_at"				gorm:"autoUpdateTime"`
+  Id              uint64        `json:"id"                gorm:"primaryKey"`
+  RawDataId       uint64        `json:"raw_data_id"       gorm:"index"`
+  Station         string        `json:"station"           gorm:"size:30;index"`
+  Protocol        string        `json:"protocol"          gorm:"size:30;index"`
+  BaseURL         string        `json:"base_url"          gorm:"size:50;index"`
+  Username        string        `json:"username"          gorm:"size:30;index"`
+  Password        string        `json:"password"          gorm:"size:30;index"`
+  Code            int           `json:"code"              gorm:"index"`
+  Status          string        `json:"status"            gorm:"size:20"`
+  Note            string        `json:"note"              gorm:"size:100"`
+  CreatedAt       time.Time     `json:"created_at"        gorm:"autoCreateTime;index"`
+  UpdatedAt       time.Time     `json:"updated_at"        gorm:"autoUpdateTime;index"`
 }
 
 type TransmissionOut struct {

@@ -15,8 +15,8 @@ type DeviceToken struct {
   Device              Device        `gorm:"foreignKey:DEV;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
   LoginToken          string        `gorm:"index;size:64"`
   RefreshToken        string        `gorm:"index;size:64"`
-  LoginExpiredAt      time.Time
-  RefreshExpiredAt    time.Time
+  LoginExpiredAt      time.Time     `gorm"index"`
+  RefreshExpiredAt    time.Time     `gorm"index"`
   CreatedAt           time.Time     `gorm:"autoCreateTime"`
 }
 
