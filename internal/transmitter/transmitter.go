@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 	log "github.com/sirupsen/logrus"
+	"cems-dis/config"
 	"cems-dis/model"
 )
 
@@ -43,6 +44,14 @@ func Start() {
 		if trx.stop {
 			log.Println("Transmitter stopped")
 			break
+		}
+
+		timeLimit := time.Now().Add(time.Duration(-config.RetransmitAfterSecs()) * time.Second)
+		upd := trx.model.DB.Model(&model.Transmission{}).
+			Where("((status = ?) OR (status = ?)) AND (updated_at < ?)", "Started", "Error", timeLimit).
+			Update("status", "Pending")
+		if err := upd.Error; err != nil {
+			log.Warningf("DB error: %s", err.Error())
 		}
 
 		var tasks []*model.Transmission
