@@ -94,10 +94,6 @@ func (s ApiService) DasReceiveData(c *gin.Context) rs.Response {
 	return res
 }
 
-func (s ApiService) DasRelayData(d *model.RawData) error {
-	return nil
-}
-
 func (s ApiService) DasLogin(c *gin.Context) rs.Response {
 	//  this function is not used
 

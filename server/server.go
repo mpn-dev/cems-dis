@@ -78,7 +78,8 @@ func registerWebRoutes(engine *gin.Engine, model *model.Model) {
   g.GET("/percentage-data", web.PercentageData)
   g.GET("/transmissions", web.Transmissions)
   g.GET("/push-requests", web.PushRequests)
-  g.GET("/dashboard", web.Dashboard)
+  // g.GET("/map", web.Map)
+  // g.GET("/overview", web.Overview)
 }
 
 func registerTemplates(engine *gin.Engine) {
@@ -90,7 +91,8 @@ func registerTemplates(engine *gin.Engine) {
   }
 
   tmplMap := map[string][]string{
-    "dashboard.html":       []string{"views/content/dashboard.html", "views/layout/admin.html"}, 
+    // "overview.html":        []string{"views/content/overview.html", "views/layout/admin.html"}, 
+    // "map.html":             []string{"views/content/map.html", "views/layout/admin.html"}, 
     "raw_data.html":        []string{"views/content/raw_data.html", "views/layout/admin.html"}, 
     "emission_data.html":   []string{"views/content/emission_data.html", "views/layout/admin.html"}, 
     "percentage_data.html": []string{"views/content/percentage_data.html", "views/layout/admin.html"}, 
