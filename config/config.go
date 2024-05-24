@@ -14,6 +14,7 @@ type config struct {
   deviceLoginTokenAge     int
   deviceRefreshTokenAge   int
   isDBLoggerEnabled       bool
+  retransmitAfterSecs     int
 }
 
 var appConfig *config
@@ -37,6 +38,7 @@ func Load(file string) {
     deviceLoginTokenAge:      getIntOrPanic("DEVICE_LOGIN_TOKEN_AGE"), 
     deviceRefreshTokenAge:    getIntOrPanic("DEVICE_REFRESH_TOKEN_AGE"), 
     isDBLoggerEnabled:        getBoolOrPanic("ENABLE_DB_LOGGER"), 
+    retransmitAfterSecs:      getIntOrPanic("RETRANSMIT_AFTER_SECS"), 
   }
 }
 
@@ -66,4 +68,8 @@ func DeviceRefreshTokenAge() int {
 
 func IsDBLoggerEnabled() bool {
   return appConfig.isDBLoggerEnabled
+}
+
+func RetransmitAfterSecs() int {
+  return appConfig.retransmitAfterSecs
 }
