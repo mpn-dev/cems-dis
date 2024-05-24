@@ -12,7 +12,7 @@ type PushRequest struct {
   Request       string      `json:"request"`
   Status        string			`json:"status"      gorm:"size:20;index"`
   Info          string			`json:"info"`
-  CreatedAt     time.Time		`json:"created_at"  gorm:"autoCreateTime"`
+  CreatedAt     time.Time		`json:"created_at"  gorm:"autoCreateTime;index"`
 }
 
 type PushRequestOut struct {
