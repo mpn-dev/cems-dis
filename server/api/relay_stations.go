@@ -19,10 +19,10 @@ func (s ApiService) RelayStationProtocols(c *gin.Context) rs.Response {
 }
 
 func (s ApiService) ListRelayStation(c *gin.Context) rs.Response {
-	page, _ := strconv.Atoi(c.Param("page"))
-	size, _ := strconv.Atoi(c.Param("size"))
+	page, _ := strconv.Atoi(c.Query("page"))
+	size, _ := strconv.Atoi(c.Query("size"))
 	sql := s.model.DB.Model(&model.RelayStation{})
-	sql = model.SetSearchKeywords(sql, []string{"name", "protocol"}, c.Param("q"))
+	sql = model.SetSearchKeywords(sql, []string{"name", "protocol", "base_url", "username", "password"}, c.Query("q"))
 	paging, err := rs.NewPaging(sql, page, size)
 	if err != nil {
 		return rs.Error(http.StatusBadRequest, err.Error())
