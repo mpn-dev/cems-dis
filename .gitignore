@@ -6,7 +6,7 @@
 *.test
 *.out
 go.work
-/logs
+logs/
 /notes
 *.code-workspace
 application.yaml
