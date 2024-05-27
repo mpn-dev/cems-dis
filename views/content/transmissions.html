@@ -40,10 +40,6 @@
           <th>ID</th>
           <th>Data ID</th>
           <th>Relay Station</th>
-          <th>Protocol</th>
-          <th>URL</th>
-          <th>Username</th>
-          <th>Password</th>
           <th>Code</th>
           <th>Status</th>
           <th>Note</th>
@@ -53,11 +49,7 @@
         <tr ng-repeat="t in transmissionList track by $index">
           <td>{{t.id}}</td>
           <td>{{t.raw_data_id}}</td>
-          <td>{{t.station}}</td>
-          <td>{{t.protocol}}</td>
-          <td>{{t.base_url}}</td>
-          <td>{{t.username}}</td>
-          <td>{{t.password}}</td>
+          <td>{{t.station_name}}</td>
           <td>{{t.code}}</td>
           <td>{{t.status}}</td>
           <td style="word-wrap: break-word; word-break: break-all;">{{t.note}}</td>
