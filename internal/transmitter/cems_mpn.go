@@ -54,21 +54,23 @@ func (p *CemsMpnProtocol) cemsMpnLogin(task *model.Transmission) (*tokens.LoginT
 		return nil, err
 	}
 	defer res.Body.Close()
-	res_body, _ := io.ReadAll(res.Body)
-	if res.StatusCode != 200 {
-		msg := fmt.Sprintf("Error %d", res.StatusCode)
-		log.Warningf("cems_mpn.Login => %s. Body: %s", msg, res_body)
-		return nil, errors.New(msg)
-	}
+
+	raw_body, _ := io.ReadAll(res.Body)
+	res_body := string(raw_body)
 	loginResp := &LoginResponse{}
-	err = json.Unmarshal(res_body, loginResp)
-	if err != nil {
+	if err = json.Unmarshal(raw_body, loginResp); err != nil {
 		log.Warningf("cems_mpn.Login => Error unmarshalling response body: %s", err.Error())
-		return nil, err
 	}
 	if loginResp.Error != nil {
-		log.Warningf("cems_mpn.Login => Error: %s", loginResp.Error)
+		log.Warningf("cems_mpn.Login => Error, code: %d, body: %s", res.StatusCode, *loginResp.Error)
 		return nil, errors.New(*loginResp.Error)
+	}
+	if res.StatusCode != 200 {
+		log.Warningf("cems_mpn.Login => Error, code: %d, body: %s", res.StatusCode, res_body)
+		return nil, errors.New(fmt.Sprintf("Error %d: %s", res.StatusCode, res_body))
+	}
+	if loginResp.Login == nil {
+		return nil, errors.New("Failed parsing login information")
 	}
 	token := tokens.RegisterToken(task.Protocol, task.BaseURL, loginResp.Login.Token, "", loginResp.Login.TokenTTL - 5)
 	return token, nil
@@ -115,12 +117,13 @@ func (p *CemsMpnProtocol) Send(task *model.Transmission) Result {
 		return Error(task, 0, err.Error())
 	}
 	defer res.Body.Close()
-	res_body, _ := io.ReadAll(res.Body)
+	raw_body, _ := io.ReadAll(res.Body)
+	res_body := string(raw_body)
 	if res.StatusCode != 200 {
-		log.Warningf("cems_mpn.Send => Error %d", res.StatusCode)
-		return Error(task, res.StatusCode, "Unknown error")
+		log.Warningf("cems_mpn.Send => Error %d, body: %s", res.StatusCode, res_body)
+		return Error(task, res.StatusCode, fmt.Sprintf("Error: `%s`", res_body))
 	}
-	return Success(task, 200, string(res_body))
+	return Success(task, 200, res_body)
 }
 
 func NewCemsMpnProtocol(model *model.Model) *CemsMpnProtocol {
