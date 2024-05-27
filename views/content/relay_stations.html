@@ -130,7 +130,7 @@
             }
 
             $scope.loadRelayStations = function() {
-              var params = ["page=" + $scope.stationPage ? $scope.stationPage : 1];
+              var params = ["page=" + ($scope.stationPage ? $scope.stationPage : 1)];
 
               if($scope.searchKeywords) {
                 params.push("q=" + $scope.searchKeywords);

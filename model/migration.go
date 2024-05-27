@@ -44,7 +44,7 @@ func (m migration) initDeviceTokens() {
 }
 
 func (m migration) initTransmissions() {
-  m.createTable("transmissions", &Transmission{})
+  m.createTable("transmissions", &TransmissionTable{})
 }
 
 func (m migration) initRawData() {

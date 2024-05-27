@@ -17,3 +17,7 @@ func delaySometime() {
 func sleepSecs(secs int) {
 	time.Sleep(time.Duration(secs) * time.Second)
 }
+
+func sleepMillisecs(ms int) {
+	time.Sleep(time.Duration(ms) * time.Millisecond)
+}

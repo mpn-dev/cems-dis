@@ -5,9 +5,9 @@ import (
   "fmt"
   "strings"
   "time"
-
   log "github.com/sirupsen/logrus"
   "gorm.io/gorm"
+  "cems-dis/utils"
 )
 
 const MAX_DEVICE_UID_LENGTH = 32
@@ -65,8 +65,8 @@ func (o *Device) Update(n *Device) {
 func (d *Device) Out() *DeviceOut {
   return &DeviceOut{
     Device:     *d, 
-    CreatedAt:  d.CreatedAt.Format(DEFAULT_DATE_TIME_FORMAT), 
-    UpdatedAt:  d.UpdatedAt.Format(DEFAULT_DATE_TIME_FORMAT), 
+    CreatedAt:  utils.TimeToString(d.CreatedAt), 
+    UpdatedAt:  utils.TimeToString(d.UpdatedAt), 
   }
 }
 

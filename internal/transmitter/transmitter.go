@@ -55,8 +55,17 @@ func Start() {
 		}
 
 		var tasks []*model.Transmission
-		err := trx.model.DB.Model(model.Transmission{}).Where("status = ?", "Pending").Order("updated_at").Limit(1).Find(&tasks).Error
+		err := trx.model.DB.Model(model.TransmissionTable{}).
+			Select("transmissions.id, raw_data_id, station_id, name station_name,  " + 
+				"protocol,base_url, username, password, code, status, note, " + 
+				"transmissions.created_at, transmissions.updated_at").
+			Joins("JOIN relay_stations ON relay_stations.id = transmissions.station_id").
+			Where("status = ?", "Pending").
+			Order("updated_at").
+			Limit(1).
+			Find(&tasks).Error
 		if err != nil {
+			log.Warningf("DB error: %s", err.Error())
 			setResult(Error(nil, 0, fmt.Sprintf("Failed fetching transmission data: %s", err.Error())))
 		}
 		if len(tasks) == 0 {

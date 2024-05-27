@@ -208,13 +208,9 @@ func (s ApiService) queueDataTransmission(rawDataId uint64) {
 		return
 	}
 	for _, sta := range stations {
-		trx := model.Transmission{
+		trx := model.TransmissionTable{
 			RawDataId:	rawDataId, 
-			Station:		sta.Name, 
-			Protocol:		sta.Protocol, 
-			BaseURL: 		sta.BaseURL, 
-			Username:		sta.Username, 
-			Password: 	sta.Password, 
+			StationId:	sta.Id, 
 			Code:				0, 
 			Note:				"", 
 			Status:			"Pending", 

@@ -5,6 +5,7 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
   "gorm.io/gorm"
+  "cems-dis/utils"
 )
 
 type RelayStation struct {
@@ -28,8 +29,8 @@ type RelayStationOut struct {
 func (s *RelayStation) Out() *RelayStationOut {
   return &RelayStationOut{
     RelayStation: *s, 
-    CreatedAt:    s.CreatedAt.Format(DEFAULT_DATE_TIME_FORMAT), 
-    UpdatedAt:    s.UpdatedAt.Format(DEFAULT_DATE_TIME_FORMAT), 
+    CreatedAt:    utils.TimeToString(s.CreatedAt), 
+    UpdatedAt:    utils.TimeToString(s.UpdatedAt), 
   }
 }
 
