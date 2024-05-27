@@ -2,6 +2,7 @@ package model
 
 import (
   "time"
+  "cems-dis/utils"
 )
 
 type PushRequest struct {
@@ -23,6 +24,6 @@ type PushRequestOut struct {
 func (r *PushRequest) Out() *PushRequestOut {
   return &PushRequestOut{
     PushRequest:  *r, 
-    CreatedAt:    r.CreatedAt.Format(DEFAULT_DATE_TIME_FORMAT), 
+    CreatedAt:    utils.TimeToString(r.CreatedAt), 
   }
 }
