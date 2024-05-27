@@ -5,6 +5,7 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
   "gorm.io/gorm"
+  "cems-dis/utils"
 )
 
 type RawData struct {
@@ -55,8 +56,8 @@ type CemsPayload struct {
 func (r *RawData) Out() *RawDataOut {
   return &RawDataOut{
     RawData:          *r, 
-    CreatedAt:        r.CreatedAt.Format(DEFAULT_DATE_TIME_FORMAT), 
-    UpdatedAt:        r.UpdatedAt.Format(DEFAULT_DATE_TIME_FORMAT), 
+    CreatedAt:        utils.TimeToString(r.CreatedAt), 
+    UpdatedAt:        utils.TimeToString(r.UpdatedAt), 
   }
 }
 

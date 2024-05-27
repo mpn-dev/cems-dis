@@ -8,6 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"cems-dis/model"
 	rs "cems-dis/server/response"
+	"cems-dis/utils"
 )
 
 func (s ApiService) ListPushRequests(c *gin.Context) rs.Response {
@@ -22,8 +23,8 @@ func (s ApiService) ListPushRequests(c *gin.Context) rs.Response {
 		if ts2 < ts1 {
 			return rs.Error(http.StatusBadRequest, "Tanggal akhir tidak boleh kurang dari tanggal awal")
 		}
-		tm1 := time.Unix(ts1, 0).Format(model.DEFAULT_DATE_TIME_FORMAT)
-		tm2 := time.Unix(ts2, 0).Format(model.DEFAULT_DATE_TIME_FORMAT)
+		tm1 := utils.TimeToString(time.Unix(ts1, 0))
+		tm2 := utils.TimeToString(time.Unix(ts2, 0))
 		sql.Where("(created_at BETWEEN ? AND ?)", tm1, tm2)
 	}
 
