@@ -22,7 +22,10 @@ function strToUtcTimestamp(value) {
 
 function utcTimestampToStr(epoch) {
   if(epoch == null) {
-    return null;
+    return "";
+  }
+  if(epoch < 946659600) {
+    return "";
   }
   var d0 = (new Date(epoch * 1000));
   var xx = epoch - (d0.getTimezoneOffset() * 60);
@@ -32,7 +35,7 @@ function utcTimestampToStr(epoch) {
 
 function epochToDate(epoch) {
   var str = utcTimestampToStr(epoch);
-  if(str == null) {
+  if(str.length == 0) {
     return str;
   }
   return str.substring(0, 19);

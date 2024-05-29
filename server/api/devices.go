@@ -17,8 +17,6 @@ import (
 
 
 func (s ApiService) ListDevices(c *gin.Context) rs.Response {
-	var devices []model.Device
-
 	page, _ := strconv.Atoi(c.Query("page"))
 	size, _ := strconv.Atoi(c.Query("size"))
 	sql := s.model.DB.Model(&model.Device{}).Order("name")
@@ -28,19 +26,31 @@ func (s ApiService) ListDevices(c *gin.Context) rs.Response {
 		sql.Where("(enabled = ?)", false)
 	}
 
-	paging, err := rs.NewPaging(sql, int(page), int(size))
-	if err != nil {
+	var paging *rs.Paging
+	var err error
+	if (page > 0) || (size > 0) {
+		paging, err = rs.NewPaging(sql, int(page), int(size))
+		if err != nil {
+			return rs.Error(http.StatusInternalServerError, err.Error())
+		}
+		sql = paging.Sql()
+	}
+
+	var devices []model.Device
+	if err := sql.Find(&devices).Error; err != nil {
 		return rs.Error(http.StatusInternalServerError, err.Error())
 	}
-	err = paging.Sql().Find(&devices).Error
-	if err != nil {
-		return rs.Error(http.StatusInternalServerError, err.Error())
-	}
+
 	list := []*model.DeviceOut{}
 	for _, d := range devices {
 		list = append(list, d.Out())
 	}
-	return rs.Success(list).DefaultWithPaging(paging)
+
+	result := rs.Success(list)
+	if paging != nil {
+		result = result.DefaultWithPaging(paging)
+	}
+	return result
 }
 
 func (s ApiService) GetDevice(c *gin.Context) rs.Response {
@@ -125,7 +135,7 @@ func (s ApiService) getDeviceFromUrl(c *gin.Context) rs.Response {
 	}
 	device, _ := s.model.GetDeviceByUid(uid)
 	if device == nil {
-		return rs.Error(http.StatusNotFound, err.Error())
+		return rs.Error(http.StatusNotFound, "UID tidak valid")
 	}
 	return rs.Success(device)
 }

@@ -1,0 +1,238 @@
+<% template "map.html" . %>
+<% define "title" %>Dashboard<% end %>
+<% define "content" %>
+    <div class="content bg-light-gray px-0 mx-0 py-0" style="overflow: hidden;">
+      <div class="row">
+        <div class="col" style="padding: 0;">
+          <div id="map" style="height: calc(100vh - 54px); margin: 0; padding: 0;">
+            <div class="map-dropdown-menu">
+              <span class="map-dropdown-block bg-red" ng-click="toggleDeviceSelectWindowVisible()">
+                <i class="fa fa-search"></i>
+              </span>
+            </div>
+            <div class="device-selection-window device-selection-window-md" style="z-index: 801;" ng-show="deviceSelectWindow">
+              <div class="container-fluid device-selection-container d-flex flex-column justify-content-start">
+                <div class="device-selection-header">
+                  <input type="text" class="input-sm" ng-model="searchKeywords" placeholder="Search keywords" style="width: 100%; border-radius: 4px;"></input><br/>
+                </div>
+                <div class="device-selection-content flex-fill">
+                  <div class="col p-0 m-0">
+                    <div class="device-selection-item uptodate" ng-repeat="d in devices" ng-click="clkSelectDevice(d.uid)" ng-show="(d.latitude != null) && (d.longitude != null) && deviceKeywordMatch('{{d.uid}}')">
+                      {{d.uid}}<br/>
+                      <strong>{{d.name}}</strong><br/>
+                    </div>
+                  </div>
+                </div>
+                <div class="device-selection-footer">
+                  <button type="button" class="btn btn-sm btn-primary" ng-click="toggleDeviceSelectWindowVisible()">Close</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="myModal" class="modal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Tidak ada device</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p>Tidak ada device untuk ditampilkan di halaman ini</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      wmApp.controller("mainCtrl", function($scope, $http, $interpolate, $timeout, $interval) {
+        $scope.acceptKeywords = true;
+        $scope.markers = {};
+
+        var map = L.map('map').setView([-2, 117], 5);
+        $scope.deviceSelectWindow = false;
+
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+
+        var container = map.zoomControl.getContainer();
+        container.style.position = 'absolute';
+        container.style.top = "10px";
+        container.style.left = "10px";
+
+        $scope.getDeviceByUid = function(uid) {
+          return $scope.devices.find(d => d.uid == uid);
+        }
+
+        $scope.popupMarker = function(uid) {
+          if(uid in $scope.markers) {
+            $http.get("/api/v1/devices/" + uid + "/latest-data").then(
+              function(response) {
+                var dev = $scope.getDeviceByUid(uid);
+                var sum = response.data.data;
+                var infoTable = "  (Tidak ada data)";
+
+                if(sum) {
+                  infoTable = getSensors().map(function(s) {
+                    var val = sum[s.code];
+                    var txt = 
+                        '      <tr class="status-1">'
+                      + '<td><strong>' + s.name + '</strong>'
+                      + '</td><td align="right">' + (val ? val : '-') + '</td>'
+                      + '<td>' + s.unit + '</td>'
+                      + '</tr>';
+                    return txt;
+                  });
+
+                  infoTable = 
+                      '    <table class="normal device-info-table">' 
+                    + infoTable.join("\r\n")
+                    + '    </table>';
+                }
+
+                var latlng = $scope.markers[uid].getLatLng();
+                var markerInfo = 
+                    '<div class="device-info-box">'
+                  + '  <div class="device-info-header">'
+                  + '   <div class="map-popup-title" style="font-weight: bold;">' + dev.name + '</div>'
+                  + '   <div class="map-popup-title" style="font-weight: bold;">' + dev.uid  + '</div>'
+                  + '   <div class="map-popup-title">' + latlng.lat.toFixed(6) + ', ' + latlng.lng.toFixed(6) + '</div>'
+                  + '   <div class="map-popup-title">' + (sum ? epochToDate(sum.timestamp) : '') + '</div>'
+                  + '  </div>'
+                  + '  <div style="padding-top: 10px;">'
+                  + infoTable
+                  + '  </div>'
+                  + '</div>';
+                var popup = L.popup().setLatLng([latlng.lat, latlng.lng]).setContent(markerInfo).openOn(map);
+              }, 
+              defaultErrorHandler
+            );
+          }
+        }
+
+        $scope.deviceKeywordMatch = function(uid) {
+          if(!$scope.searchKeywords) {
+            return true;
+          }
+
+          var kk = $scope.searchKeywords.split(" ").filter(function(k){return k.trim() != "";});
+          if(kk.length == 0) {
+            return true;
+          }
+
+          var matched = true;
+          var dev = $scope.getDeviceByUid(uid);
+          if(dev) {
+            var devFields = [dev.uid, dev.name.toLowerCase()].join("|");
+            kk.forEach(function(k) {
+              if(!devFields.includes(k.toLowerCase())) {
+                matched = false;
+                return;
+              }
+            });
+          }
+
+          return matched;
+        }
+
+        $scope.$watch('searchKeywords', function(k) {
+          if($scope.acceptKeywords && ($scope.devices)) {
+            var temp = $scope.devices;
+            $scope.devices = [];
+            $scope.acceptKeywords = false;
+            $timeout(function() {
+              $scope.acceptKeywords = true;
+              $scope.devices = temp;
+            }, 1);
+          }
+        })
+
+        $scope.setDeviceSelectWindowVisible = function(value) {
+          $scope.deviceSelectWindow = value;
+          if($scope.deviceSelectWindow) {
+            map.scrollWheelZoom.disable();
+            map.dragging.disable();
+            map.doubleClickZoom.disable();
+          } else {
+            map.scrollWheelZoom.enable();
+            map.dragging.enable();
+            map.doubleClickZoom.enable();
+          }
+        }
+
+        $scope.toggleDeviceSelectWindowVisible = function() {
+          $scope.setDeviceSelectWindowVisible(!$scope.deviceSelectWindow);
+        }
+
+        $scope.clkSelectDevice = function(uid) {
+          $scope.setDeviceSelectWindowVisible(false);
+          if(uid in $scope.markers) {
+            $scope.popupMarker(uid);
+          }
+        }
+
+        $scope.clkManage = function() {
+          $scope.setDeviceSelectWindowVisible(false);
+          $timeout(function() {
+            window.open("/web/device", "_blank");
+          }, 1);
+        }
+
+        $scope.markerClicked = function(e) {
+          $scope.popupMarker(e.target._icond_id);
+        }
+
+        $scope.createMapMarkers = function() {
+          for(var i = 0; i < $scope.devices.length; i++) {
+            var dev = $scope.devices[i];
+            if(!(dev.uid in $scope.markers)) {
+              if((dev.latitude != null) && (dev.longitude != null)) {
+                var marker = L.marker([dev.latitude, dev.longitude], {
+                  title:          dev.uid + " - " + " " + dev.name, 
+                  icon: L.icon({
+                    iconUrl:      "/libs/images/marker-icon.png", 
+                    iconSize:     [23, 39], 
+                    iconAnchor:   [13, 40], 
+                    popupAnchor:  [0, 0], 
+                    shadowUrl:    "/libs/images/marker-shadow.png", 
+                    shadowSize:   [39, 39], 
+                    shadowAnchor: [13, 39]
+                  })
+                });
+                marker._icond_id = dev.uid;
+                marker.addTo(map);
+                marker.on('click', $scope.markerClicked);
+                $scope.markers[dev.uid] = marker;
+              }
+            }
+          }
+        }
+
+        $scope.loadDevices = function() {
+          $http.get("/api/v1/devices").then(
+            function(response) {
+              $scope.devices = response.data.data.filter(d => d.enabled > 0);
+              $scope.createMapMarkers();
+              if($scope.devices.length == 0) {
+                $('#myModal').modal('show');
+              }
+            }, 
+            defaultErrorHandler
+          );
+        }
+
+        setInterval($scope.loadDevices, 60000);
+        $scope.loadDevices();
+      });
+    </script>
+<% end %>
