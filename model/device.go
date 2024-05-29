@@ -14,7 +14,7 @@ const MAX_DEVICE_UID_LENGTH = 32
 
 type Device struct {
   UID         string                `json:"uid"         gorm:"size:32;primaryKey"`
-  Name        string                `json:"name"        gorm:"size:30"`
+  Name        string                `json:"name"        gorm:"size:50"`
   Latitude    *float64              `json:"latitude"`
   Longitude   *float64              `json:"longitude"`
   ApiKey      string                `json:"apikey"      gorm:"index;size:30"`

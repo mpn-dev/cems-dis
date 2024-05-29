@@ -21,9 +21,8 @@ type menuItems struct {
 
 func allMenuItems() []menuItem {
   return []menuItem{
-    // menuItem{name: "overview",          text: "Overview",               path: "/web/overview",          exts: ""}, 
-    // menuItem{name: "map",               text: "Map",                    path: "/web/map",               exts: ""}, 
-    // menuItem{}, 
+    menuItem{name: "dashboard",         text: "Dashboard",              path: "/web/dashboard",         exts: ""}, 
+    menuItem{}, 
     menuItem{name: "raw-data",          text: "Raw Data",               path: "/web/raw-data",          exts: ""}, 
     menuItem{name: "emission-data",     text: "Emission Data",          path: "/web/emission-data",     exts: ""}, 
     menuItem{name: "percentage-data",   text: "Percentage Data",        path: "/web/percentage-data",   exts: ""}, 
