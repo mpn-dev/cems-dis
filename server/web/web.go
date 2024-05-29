@@ -40,12 +40,13 @@ func PushRequests(c *gin.Context) {
 	handlePageByMenu(c, "push-requests", "push_requests.html", nil)
 }
 
-func Map(c *gin.Context) {
-	handlePageByMenu(c, "map", "map.html", nil)
+func Dashboard(c *gin.Context) {
+	handlePageByMenu(c, "dashboard", "dashboard.html", nil)
 }
 
 func Overview(c *gin.Context) {
-	handlePageByMenu(c, "overview", "overview.html", nil)
+	data := gin.H{"uid": c.Query("uid")}
+	handlePageByMenu(c, "overview", "overview.html", data)
 }
 
 func selectMenu(c *gin.Context, menu string) {

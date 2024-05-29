@@ -27,6 +27,41 @@ func (s ApiService) GetRawDataById(c *gin.Context) rs.Response {
 	return rs.Success(record.Out())
 }
 
+func (s ApiService) GetLatestData(c *gin.Context) rs.Response {
+	res := s.getDeviceFromUrl(c)
+	if res.IsError() {
+		return res
+	}
+  device := res.Data.(*model.Device)
+	rawData := &model.RawData{}
+	err := s.model.DB.Where("uid = ?", device.UID).Order("timestamp DESC").Limit(1).First(rawData).Error
+	if err != nil {
+		rawData = nil
+	}
+	return rs.Success(rawData)
+}
+
+func (s ApiService) GetChartData(c *gin.Context) rs.Response {
+	res := s.getDeviceFromUrl(c)
+	if res.IsError() {
+		return res
+	}
+	rows := []model.RawData{}
+	device := res.Data.(*model.Device)
+	latest := &model.RawData{}
+	err := s.model.DB.Where("uid = ?", device.UID).Order("timestamp DESC").Limit(1).First(latest).Error
+	if err != nil {
+		return rs.Success(rows)
+	}
+	ts1 := latest.Timestamp - (latest.Timestamp % 86400)
+	ts2 := ts1 + 86400 - 1
+	err = s.model.DB.Where("(uid = ?) AND (timestamp BETWEEN ? AND ?)", device.UID, ts1, ts2).Order("timestamp").Find(&rows).Error
+	if err != nil {
+		log.Warningf("DB error: %s", err.Error())
+	}
+	return rs.Success(rows)
+}
+
 func (s ApiService) ListRawData(c *gin.Context) rs.Response {
 	uid := strings.Trim(c.Param("uid"), " ")
 	ts1, _ := strconv.ParseInt(c.Query("ts1"), 10, 64)

@@ -155,17 +155,7 @@
               "export": "Raw Data > Export Excel", 
             }
 
-            $scope.sensors = [
-              {code: "so2",         name: "SO2",          unit: ""}, 
-              {code: "nox",         name: "NOX",          unit: ""}, 
-              {code: "pm",          name: "PM",           unit: ""}, 
-              {code: "h2s",         name: "H2S",          unit: ""}, 
-              {code: "opacity",     name: "Opacity",      unit: ""}, 
-              {code: "flow",        name: "Flow",         unit: ""}, 
-              {code: "o2",          name: "O2",           unit: ""}, 
-              {code: "temperature", name: "Temperature",  unit: ""}, 
-              {code: "pressure",    name: "Pressure",     unit: ""}, 
-            ];
+            $scope.sensors = getSensors();
             $scope.charts = [];
             $scope.device = {};
             $scope.devicePage = 1;

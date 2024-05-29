@@ -49,6 +49,7 @@ func registerApiRoutes(engine *gin.Engine, model *model.Model) {
   g.PATCH("/devices/:uid", j(api.ApiService.UpdateDevice))
   g.DELETE("/devices/:uid", j(api.ApiService.DeleteDevice))
   g.GET("/devices/:uid/raw-data", j(api.ApiService.ListRawData))
+  g.GET("/devices/:uid/latest-data", j(api.ApiService.GetLatestData))
   g.GET("/devices/:uid/emission-data", j(api.ApiService.ListEmissionData))
   g.GET("/devices/:uid/percentage-data", j(api.ApiService.ListPercentageData))
 
@@ -78,8 +79,7 @@ func registerWebRoutes(engine *gin.Engine, model *model.Model) {
   g.GET("/percentage-data", web.PercentageData)
   g.GET("/transmissions", web.Transmissions)
   g.GET("/push-requests", web.PushRequests)
-  // g.GET("/map", web.Map)
-  // g.GET("/overview", web.Overview)
+  g.GET("/dashboard", web.Dashboard)
 }
 
 func registerTemplates(engine *gin.Engine) {
@@ -91,8 +91,7 @@ func registerTemplates(engine *gin.Engine) {
   }
 
   tmplMap := map[string][]string{
-    // "overview.html":        []string{"views/content/overview.html", "views/layout/admin.html"}, 
-    // "map.html":             []string{"views/content/map.html", "views/layout/admin.html"}, 
+    "dashboard.html":       []string{"views/content/dashboard.html", "views/layout/map.html"}, 
     "raw_data.html":        []string{"views/content/raw_data.html", "views/layout/admin.html"}, 
     "emission_data.html":   []string{"views/content/emission_data.html", "views/layout/admin.html"}, 
     "percentage_data.html": []string{"views/content/percentage_data.html", "views/layout/admin.html"}, 
