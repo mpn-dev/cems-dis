@@ -91,7 +91,7 @@
               </div>
             </div>
 
-            <span ng-show="(tableData.length == 0) && (chartData.length == 0)">
+            <span ng-show="((selectedMode == 'table') && (tableData.length == 0)) || ((selectedMode == 'chart') && (chartData.length == 0))">
               Tidak ada data untuk range waktu tersebut
             </span>
           </div>
@@ -205,7 +205,7 @@
             $scope.loadDevices = function() {
               var page = $scope.devicePage ? $scope.devicePage : 1;
               var keywords = $scope.searchKeywords ? $scope.searchKeywords : "";
-              $http.get("/api/v1/devices?page=" + page + "&q=" + keywords, requestConfig()).then(
+              $http.get("/api/v1/devices?page=" + page + "&q=" + keywords).then(
                 function(response) {
                   $scope.devices = response.data.data;
                   $scope.cntShownDevices = $scope.devices.length;
@@ -306,7 +306,7 @@
 
               var url = "/api/v1/devices/" + $scope.device.uid + "/raw-data?" + options.join("&");
               $scope.isBusy = true;
-              $http.get(url, requestConfig()).then(
+              $http.get(url).then(
                 function(response) {
                   receive(response);
                   $scope.isBusy = false;
@@ -323,7 +323,7 @@
             }
 
             $scope.clkSelectDevice = function(id) {
-              $http.get("/api/v1/devices/" + id, requestConfig()).then(
+              $http.get("/api/v1/devices/" + id).then(
                 function(response) {
                   $scope.device = response.data.data;
                   $scope.dev_info = $scope.joinFields(
@@ -337,6 +337,8 @@
                   var options = {timeZone: "UTC", hour: "numeric", minute: "numeric", second: "numeric", hour12: false};
                   $scope.startTimeLocal = new Intl.DateTimeFormat("en-GB", options).format(time1);
                   $scope.endTimeLocal = new Intl.DateTimeFormat("en-GB", options).format(time2);
+                  $scope.tableData = [];
+                  $scope.chartData = [];
                   $scope.presentData();
                 }
               )
