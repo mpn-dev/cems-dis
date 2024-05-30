@@ -16,7 +16,7 @@ type migration struct {
 
 func (m migration) createTable(tableName string, blueprint interface{}) {
   if !m.db.Migrator().HasTable(tableName) {
-    log.Printf("[MIGRATION] Creating table '%s'\n", tableName)
+    log.Printf("[MIGRATION] Creating table '%s'", tableName)
     m.db.AutoMigrate(blueprint)
   }
 }
@@ -48,7 +48,7 @@ func (m migration) initTransmissions() {
 }
 
 func (m migration) initRawData() {
-  m.createTable("cems_records", &RawData{})
+  m.createTable("raw_data", &RawData{})
 }
 
 func (m migration) initPushRequest() {
