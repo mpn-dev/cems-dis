@@ -22,9 +22,7 @@ func dummySend() {
 }
 
 func (p *DummyProtocol) Send(task *model.Transmission) Result {
-	fmt.Println("Transmitting data using dummy protocol...")
 	dummySend()
-	fmt.Println("Success")
 	return Success(task, 0, "")
 }
 
