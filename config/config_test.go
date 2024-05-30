@@ -11,16 +11,19 @@ import (
 
 func TestConfig(t *testing.T) {
   vars := map[string]string{
-    "SERVER_PORT":                  "2000", 
     "DB_HOST":                      "localhost", 
     "DB_PORT":                      "5432", 
     "DB_USER":                      "test_user", 
     "DB_PASS":                      "test_pass", 
     "DB_NAME":                      "test_name", 
+
+    "SERVER_PORT":                  "2000", 
     "USER_LOGIN_TOKEN_AGE_SHORT":   "1800", 
     "USER_LOGIN_TOKEN_AGE_LONG":    "86400", 
     "DEVICE_LOGIN_TOKEN_AGE":       "310", 
     "DEVICE_REFRESH_TOKEN_AGE":     "320", 
+    "ENABLE_DB_LOGGER":             "true", 
+    "RETRANSMIT_AFTER_SECS":        "120", 
   }
 
   for k, v := range vars {
@@ -36,4 +39,6 @@ func TestConfig(t *testing.T) {
   assert.Equal(t, 86400, UserLoginTokenAgeLong())
   assert.Equal(t, 310, DeviceLoginTokenAge())
   assert.Equal(t, 320, DeviceRefreshTokenAge())
+  assert.Equal(t, true, IsDBLoggerEnabled())
+  assert.Equal(t, 120, RetransmitAfterSecs())
 }
