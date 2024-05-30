@@ -131,7 +131,8 @@ func registerTemplates(engine *gin.Engine) {
 }
 
 func (s Server) Start() {
-  log.Infof("Serving on port %d\n", s.port)
+  log.Info("***** START CEMS DIS *****")
+  log.Infof("Serving on port %d", s.port)
   s.engine.Run(fmt.Sprintf("0.0.0.0:%d", s.port))
 }
 

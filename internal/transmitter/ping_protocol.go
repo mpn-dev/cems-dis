@@ -27,14 +27,11 @@ func sendPing() {
 	}
 	defer res.Body.Close()
 	res_body, _ := io.ReadAll(res.Body)
-	fmt.Printf("status code: %v\n", res.StatusCode)
-	fmt.Printf("body: %s\n", string(res_body))
+	fmt.Printf("Code: %d, Body: %s\n", res.StatusCode, string(res_body))
 }
 
 func (p *PingProtocol) Send(task *model.Transmission) Result {
-	fmt.Println("Transmitting data using ping protocol...")
 	sendPing()
-	fmt.Println("Success")
 	return Success(task, 200, "")
 }
 

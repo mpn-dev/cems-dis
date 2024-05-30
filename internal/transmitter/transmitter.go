@@ -1,6 +1,7 @@
 package transmitter
 
 import (
+	"errors"
 	"fmt"
 	"time"
 	log "github.com/sirupsen/logrus"
@@ -25,14 +26,16 @@ func Init(model *model.Model) {
 }
 
 func Start() {
-	setResult := func (result Result) {
-		if result.IsSuccess() {
-			trx.model.SetTransmissionSuccess(result.Task(), result.Code(), result.Note())
-			log.Printf("transmitter.Start => %s", result.Info())
-		} else {
+	setResult := func (result Result) error {
+		if !result.IsSuccess() {
 			trx.model.SetTransmissionError(result.Task(), result.Code(), result.Note())
 			log.Warningf("transmitter.Start => %s", result.Info())
+			return errors.New(result.Info())
 		}
+
+		trx.model.SetTransmissionSuccess(result.Task(), result.Code(), result.Note())
+		log.Printf("transmitter.Start => %s", result.Info())
+		return nil
 	}
 
 	trx.stop = false
@@ -90,8 +93,14 @@ func Start() {
 			continue
 		}
 
+		fmt.Printf("[Transmit:%s#%d]\n", task.Protocol, task.Id)
 		trx.model.SetTransmissionStarted(task)
-		setResult(protocol.Send(task))
+		err = setResult(protocol.Send(task))
+		if err != nil {
+			fmt.Printf("Error: %s\n", err.Error())
+			continue
+		}
+		fmt.Println("Success")
 	}
 }
 
