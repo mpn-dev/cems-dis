@@ -62,7 +62,7 @@
               </tr>
             </table>
             <hr>
-            <button class="btn btn-sm btn-primary" ng-click="selectExportRange()">Export</button>
+            <button class="btn btn-sm btn-primary" ng-click="getExcelFile()">Export</button>
             <button class="btn btn-sm btn-primary" ng-click="clkBack()">Kembali</button>
           </div>
 
@@ -191,14 +191,14 @@
               $scope.devicePage = 1;
             }
 
-            $scope.selectExportRange = function() {
+            $scope.getExcelFile = function() {
               var range = getDateRange(export_date_start, export_date_end, "Tanggal Awal", "Tanggal Akhir");
               if(range instanceof Error) {
                 window.alert(range.message);
                 return;
               }
 
-              var url = "/res/device_logs/" + $scope.device.kd_hardware + "/download?ts1=" + range.start + "&ts2=" + range.end + "&token=" + getCsrfToken();
+              var url = "/res/raw-data/" + $scope.device.uid + "/download?ts1=" + range.start + "&ts2=" + range.end;
               window.open(url, "_blank");
             }
 
