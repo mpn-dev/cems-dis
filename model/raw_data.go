@@ -11,7 +11,7 @@ import (
 type RawData struct {
   Id                  uint64      `json:"id"          gorm:"primaryKey"`
   DEV                 string      `json:"uid"         gorm:"column:uid;size:32;index"`
-  Timestamp           uint64      `json:"timestamp"`
+  Timestamp           int64       `json:"timestamp"`
   SO2                 *float64    `json:"so2"`
   NOX                 *float64    `json:"nox"`
   PM                  *float64    `json:"pm"`
@@ -26,7 +26,7 @@ type RawData struct {
 }
 
 type RawDataIn struct {
-  Timestamp           uint64      `json:"timestamp"`
+  Timestamp           int64       `json:"timestamp"`
   SO2                 *float64    `json:"so2"`
   NOX                 *float64    `json:"nox"`
   PM                  *float64    `json:"pm"`
@@ -48,10 +48,24 @@ type SensorValues map[string]*float64
 
 type CemsPayload struct {
 	UID					string				`json:"uid"`
-	Timestamp		uint64				`json:"timestamp"`
+	Timestamp		int64				  `json:"timestamp"`
 	Values			SensorValues	`json:"values"`
 }
 
+
+func (r RawData) Values() []*float64 {
+  return []*float64{
+    r.SO2, 
+    r.NOX, 
+    r.PM, 
+    r.H2S, 
+    r.Opacity, 
+    r.Flow, 
+    r.O2, 
+    r.Temperature, 
+    r.Pressure, 
+  }
+}
 
 func (r *RawData) Out() *RawDataOut {
   return &RawDataOut{

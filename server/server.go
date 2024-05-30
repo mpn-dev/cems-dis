@@ -64,10 +64,25 @@ func registerApiRoutes(engine *gin.Engine, model *model.Model) {
 
   g.GET("/transmissions", j(api.ApiService.ListTransmissions))
 
-  d := engine.Group("pengiriman-das")
-  d.GET("", j(api.ApiService.ListRawData))
-  d.POST("", middleware.TokenAuthMiddleware, j(api.ApiService.DasReceiveData))
-  d.POST("/login", j(api.ApiService.DasLoginByUid))
+  p := engine.Group("pengiriman-das")
+  p.GET("", j(api.ApiService.ListRawData))
+  p.POST("", middleware.TokenAuthMiddleware, j(api.ApiService.DasReceiveData))
+  p.POST("/login", j(api.ApiService.DasLoginByUid))
+
+
+  d := func(fn func(api.ApiService, *gin.Context) response.Response) func(*gin.Context) {
+    return func(c *gin.Context) {
+      res := fn(s, c)
+      if res.IsError() {
+        res.Json(c)
+        return
+      }
+
+      res.Data.(func())()
+    }
+  }
+  r := engine.Group("res")
+  r.GET("/raw-data/:uid/download", d(api.ApiService.DownloadRawData))
 }
 
 func registerWebRoutes(engine *gin.Engine, model *model.Model) {
