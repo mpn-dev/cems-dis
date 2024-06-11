@@ -20,7 +20,7 @@ import (
 
 
 func (s ApiService) DasReceiveData(c *gin.Context) rs.Response {
-	handler := func(svc ApiService, pr *model.PushRequest, devToken *model.DeviceToken) rs.Response {
+	handler := func(svc ApiService, pr *model.PushRequest, devToken *model.DeviceToken, sensors model.Sensors) rs.Response {
 		setErr := func(r *model.PushRequest, code int, msg string) rs.Response {
 			r.Status = "Error"
 			r.Info = msg
@@ -40,25 +40,29 @@ func (s ApiService) DasReceiveData(c *gin.Context) rs.Response {
 			return setErr(pr, http.StatusBadRequest, "Device untuk bearer token tersebut tidak ada di database")
 		}
 
-		request := &model.RawDataIn{}
-		if err := json.Unmarshal(bodyRaw, request); err != nil {
+		data := make(map[string]interface{})
+		if err := json.Unmarshal(bodyRaw, &data); err != nil {
 			return setErr(pr, http.StatusBadRequest, "Invalid JSON body")
-		} else if request.Timestamp == 0 {
+		}
+
+		record, err := s.model.ParseRawData(data)
+		if err != nil {
+			return setErr(pr, http.StatusBadRequest, err.Error())
+		}
+		if record.Timestamp == 0 {
 			return setErr(pr, http.StatusBadRequest, "Timestamp tidak valid")
 		}
 
-		record := model.NewRawData(device.UID, request)
-		existing := &model.RawData{}
-		s.model.DB.Model(existing).
+		record.DEV = device.UID
+		temp := &model.RawData{}
+		s.model.DB.Model(temp).
 			Where("(uid = ?) AND (timestamp = ?)", record.DEV, record.Timestamp).
-			First(existing)
-		if existing.Id == 0 {
-			err = s.model.DB.Create(record).Error
-		} else {
-			existing.Update(record)
-			record = existing
-			err = s.model.DB.Save(record).Error
+			First(temp)
+		if temp.Id > 0 {
+			record.Id = temp.Id
+			record.CreatedAt = temp.CreatedAt
 		}
+		err = s.model.DB.Save(record).Error
 
 		if err != nil {
 			log.Warningf(fmt.Sprintf("DB error: %s", errors.WithStack(err)))
@@ -68,7 +72,7 @@ func (s ApiService) DasReceiveData(c *gin.Context) rs.Response {
 		s.queueDataTransmission(record.Id);
 
 		pr.Status = "Success"
-		return rs.New(201, nil, record.Out()).UseDasFormatter()
+		return rs.New(201, nil, record.Out(sensors)).UseDasFormatter()
 	}
 
 	token := utils.ParseBearerToken(c.GetHeader("Authorization"))
@@ -82,15 +86,21 @@ func (s ApiService) DasReceiveData(c *gin.Context) rs.Response {
 		Info:				"", 
 	}
 
+	sensors, err := s.model.GetActiveSensors()
+	if err != nil {
+		return rs.Error(http.StatusInternalServerError, err.Error())
+	}
+
 	if err := s.model.DB.Save(pushRequest).Error; err != nil {
 		log.Warningf("DB error: %s", err.Error())
 		return rs.Error(http.StatusInternalServerError, "DB error")
 	}
 
-	res := handler(s, pushRequest, deviceToken)
+	res := handler(s, pushRequest, deviceToken, sensors)
 	if err := s.model.DB.Save(pushRequest).Error; err != nil {
 		log.Warningf("DB error: %s", err.Error())
 	}
+
 	return res
 }
 

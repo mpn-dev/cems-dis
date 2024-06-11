@@ -8,106 +8,118 @@ import (
   "cems-dis/utils"
 )
 
-type RawData struct {
-  Id                  uint64      `json:"id"          gorm:"primaryKey"`
-  DEV                 string      `json:"uid"         gorm:"column:uid;size:32;index"`
-  Timestamp           int64       `json:"timestamp"`
-  SO2                 *float64    `json:"so2"`
-  NOX                 *float64    `json:"nox"`
-  PM                  *float64    `json:"pm"`
-  H2S                 *float64    `json:"h2s"         gorm:"column:h2s"`
-  Opacity             *float64    `json:"opacity"`
-  Flow                *float64    `json:"flow"`
-  O2                  *float64    `json:"o2"`
-  Temperature         *float64    `json:"temperature"`
-  Pressure            *float64    `json:"pressure"`
-  CreatedAt           time.Time   `json:"created_at"  gorm:"autoCreateTime"`
-  UpdatedAt           time.Time   `json:"updated_at"  gorm:"autoUpdateTime"`
-}
+type SensorValues map[string]*float64
 
-type RawDataIn struct {
-  Timestamp           int64       `json:"timestamp"`
-  SO2                 *float64    `json:"so2"`
-  NOX                 *float64    `json:"nox"`
-  PM                  *float64    `json:"pm"`
-  H2S                 *float64    `json:"h2s"`
-  Opacity             *float64    `json:"opacity"`
-  Flow                *float64    `json:"flow"`
-  O2                  *float64    `json:"o2"`
-  Temperature         *float64    `json:"temperature"`
-  Pressure            *float64    `json:"pressure"`
+type RawData struct {
+  Id                  uint64          `json:"id"          gorm:"primaryKey"`
+  DEV                 string          `json:"uid"         gorm:"column:uid;size:32;index"`
+  Timestamp           int64           `json:"timestamp"`
+  S01                 *float64
+  S02                 *float64
+  S03                 *float64
+  S04                 *float64
+  S05                 *float64
+  S06                 *float64
+  S07                 *float64
+  S08                 *float64
+  S09                 *float64
+  S10                 *float64
+  S11                 *float64
+  S12                 *float64
+  CreatedAt           time.Time       `json:"created_at"  gorm:"autoCreateTime;index"`
+  UpdatedAt           time.Time       `json:"updated_at"  gorm:"autoUpdateTime"`
 }
 
 type RawDataOut struct {
-  RawData
-  CreatedAt           string      `json:"created_at"`
-  UpdatedAt           string      `json:"updated_at"`
+  Id                  uint64          `json:"id"`
+  DEV                 string          `json:"uid"`
+  Timestamp           int64           `json:"timestamp"`
+  SensorValues                        `json:"values"`
+  CreatedAt           string          `json:"created_at"`
+  UpdatedAt           string          `json:"updated_at"`
 }
-
-type SensorValues map[string]*float64
 
 type CemsPayload struct {
-	UID					string				`json:"uid"`
-	Timestamp		int64				  `json:"timestamp"`
-	Values			SensorValues	`json:"values"`
+  UID                 string          `json:"uid"`
+  Timestamp           int64           `json:"timestamp"`
+  SensorValues                        `json:"values"`
 }
 
-
-func (r RawData) Values() []*float64 {
-  return []*float64{
-    r.SO2, 
-    r.NOX, 
-    r.PM, 
-    r.H2S, 
-    r.Opacity, 
-    r.Flow, 
-    r.O2, 
-    r.Temperature, 
-    r.Pressure, 
+func (v SensorValues) Value(key string) *float64 {
+  if vx, ok := v[key]; ok {
+    return vx
   }
+  return nil
 }
 
-func (r *RawData) Out() *RawDataOut {
+func (r *RawData) GetValues(ss Sensors) SensorValues {
+  vals := SensorValues{
+    "s01": r.S01, 
+    "s02": r.S02, 
+    "s03": r.S03, 
+    "s04": r.S04, 
+    "s05": r.S05, 
+    "s06": r.S06, 
+    "s07": r.S07, 
+    "s08": r.S08, 
+    "s09": r.S09, 
+    "s10": r.S10, 
+    "s11": r.S11, 
+    "s12": r.S12, 
+  }
+
+  sv := SensorValues{}
+  for _, s := range ss {
+    if s.Enabled {
+      sv[s.Code] = vals.Value(s.Slot)
+    }
+  }
+
+  return sv
+}
+
+func (r *RawData) SetValues(ss Sensors, vv SensorValues) {
+  vals := SensorValues{}
+  for _, s := range ss {
+    if s.Enabled {
+      vals[s.Slot] = vv.Value(s.Code)
+    }
+  }
+
+  r.S01 = vals.Value("s01")
+  r.S02 = vals.Value("s02")
+  r.S03 = vals.Value("s03")
+  r.S04 = vals.Value("s04")
+  r.S05 = vals.Value("s05")
+  r.S06 = vals.Value("s06")
+  r.S07 = vals.Value("s07")
+  r.S08 = vals.Value("s08")
+  r.S09 = vals.Value("s09")
+  r.S10 = vals.Value("s10")
+  r.S11 = vals.Value("s11")
+  r.S12 = vals.Value("s12")
+}
+
+func (r *RawData) Out(sensors Sensors) *RawDataOut {
   return &RawDataOut{
-    RawData:          *r, 
+    Id:               r.Id, 
+    DEV:              r.DEV, 
+    Timestamp:        r.Timestamp, 
+    SensorValues:     r.GetValues(sensors), 
     CreatedAt:        utils.TimeToString(r.CreatedAt), 
     UpdatedAt:        utils.TimeToString(r.UpdatedAt), 
   }
 }
 
-func (r *RawData) CemsPayload() *CemsPayload {
+func (r *RawData) CemsPayload(sensors Sensors) *CemsPayload {
   return &CemsPayload{
-    UID:        r.DEV, 
-    Timestamp:  r.Timestamp, 
-    Values:     SensorValues{
-      "so2":          r.SO2, 
-      "nox":          r.NOX, 
-      "pm":           r.PM, 
-      "h2s":          r.H2S, 
-      "opacity":      r.Opacity, 
-      "flow":         r.Flow, 
-      "o2":           r.O2, 
-      "temperature":  r.Temperature, 
-      "pressure":     r.Pressure, 
-    }, 
+    UID:            r.DEV, 
+    Timestamp:      r.Timestamp, 
+    SensorValues:   r.GetValues(sensors), 
   }
 }
 
-func (r *RawData) Update(f *RawData) {
-  r.DEV               = f.DEV
-  r.Timestamp         = f.Timestamp
-  r.SO2               = f.SO2
-  r.NOX               = f.NOX
-  r.PM                = f.PM
-  r.H2S               = f.H2S
-  r.Opacity           = f.Opacity
-  r.Flow              = f.Flow
-  r.O2                = f.O2
-  r.Temperature       = f.Temperature
-  r.Pressure          = f.Pressure
-}
-
-func (m *Model) GetRawDataById(id uint64) (*RawDataOut, error) {
+func (m *Model) GetRawDataById(id uint64) (*RawData, error) {
 	record := &RawData{}
 	if err := m.DB.Model(record).First(record, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -117,21 +129,35 @@ func (m *Model) GetRawDataById(id uint64) (*RawDataOut, error) {
 			return nil, errors.New("DB error")
 		}
 	}
-	return record.Out(), nil
+
+	return record, nil
 }
 
-func NewRawData(uid string, i *RawDataIn) *RawData {
-  return &RawData{
-    DEV:              uid, 
-    Timestamp:        i.Timestamp, 
-    SO2:              i.SO2, 
-    NOX:              i.NOX, 
-    PM:               i.PM, 
-    H2S:              i.H2S, 
-    Opacity:          i.Opacity, 
-    Flow:             i.Flow, 
-    O2:               i.O2, 
-    Temperature:      i.Temperature, 
-    Pressure:         i.Pressure, 
+func (m *Model) ParseRawData(data map[string]interface{}) (*RawData, error) {
+  result := &RawData{}
+  sensors, err := m.GetActiveSensors()
+  if err != nil {
+    return nil, err
   }
+
+  if val, ok := data["uid"]; ok {
+    result.DEV = val.(string)
+  }
+  if val, ok := data["timestamp"]; ok {
+    if ts, ok := val.(float64); ok {
+      result.Timestamp = int64(ts)
+    }
+  }
+
+  values := SensorValues{}
+  for _, s := range sensors {
+    if val, ok := data[s.Code]; ok {
+      if vx, ok := val.(float64); ok {
+        values[s.Code] = &vx
+      }
+    }
+  }
+
+  result.SetValues(sensors, values)
+  return result, nil
 }

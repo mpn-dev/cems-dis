@@ -67,10 +67,16 @@ func (s ApiService) DownloadRawData(c *gin.Context) rs.Response {
 		return dftEr("Error creating excel sheet: %s", err.Error())
 	}
 
-	sensors := s.model.GetSensorDefinitions()
+	sensors, err := s.model.GetActiveSensors()
+	if err != nil {
+		return rs.Error(http.StatusInternalServerError, err.Error())
+	}
+
 	excel.SetCellValue(sheet, "A6", "Timestamp")
 	for i, s := range sensors {
-		excel.SetCellValue(sheet, cellName(6, 2 + i), s.NameAndUnit())
+		if s.Enabled {
+			excel.SetCellValue(sheet, cellName(6, 2 + i), s.NameAndUnit())
+		}
 	}
 
 	excel.SetCellValue(sheet, cellName(1, 1), "UID")
@@ -90,10 +96,13 @@ func (s ApiService) DownloadRawData(c *gin.Context) rs.Response {
 	startRow := 7
 	for i, r := range rows {
 		row := startRow + i
+		val := r.GetValues(sensors)
 		excel.SetCellValue(sheet, cellName(row, 1), time.Unix(r.Timestamp, 0))
-		for j, v := range r.Values() {
-			if v != nil {
-				excel.SetCellValue(sheet, cellName(row, 2 + j), *v)
+		for j, s := range sensors {
+			if s.Enabled {
+				if v := val.Value(s.Code); v != nil {
+					excel.SetCellValue(sheet, cellName(row, 2 + j), *v)
+				}
 			}
 		}
 	}

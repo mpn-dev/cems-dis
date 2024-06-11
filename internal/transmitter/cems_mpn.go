@@ -100,9 +100,14 @@ func (p *CemsMpnProtocol) Send(task *model.Transmission) Result {
 		return Error(task, 0, msg)
 	}
 
+	sensors, err := p.model.GetActiveSensors()
+	if err != nil {
+		return Error(task, 0, err.Error())
+	}
+
 	url := fmt.Sprintf("%s/api/v1/cems/push", task.BaseURL)
 	var body []byte
-	body, _ = json.Marshal(record.CemsPayload())
+	body, _ = json.Marshal(record.CemsPayload(sensors))
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
 	if err != nil {
 		log.Warningf("cems_mpn.Send => Error: %s", err.Error())

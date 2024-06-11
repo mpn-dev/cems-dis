@@ -1,0 +1,92 @@
+<% template "admin.html" . %>
+<% define "title" %>Sensor<% end %>
+<% define "content" %>
+        <div class="row justify-content-between pb-2">
+          <div class="col">
+            <div class="title1a text-nowrap">Daftar Sensor</div>
+          </div>
+        </div>
+
+        <div class="row mb-4">
+          <div class="col">
+            <table>
+              <tr>
+                <th>&nbsp;</th>
+                <th>Kode</th>
+                <th>Nama</th>
+                <th>Satuan</th>
+              </tr>
+              <tr height="32px" ng-repeat="s in sensors">
+                <td class="text-center" style="border: none;"><input type="checkbox" style="width: 20px; height: 20px;" ng-model="s.enabled"></input></td>
+                <td style="border: none;"><input type="text" style="width: 100px;" ng-model="s.code"></input></td>
+                <td style="border: none;"><input type="text" style="width: 180px;" ng-model="s.name"></input></td>
+                <td style="border: none;"><input type="text" style="width: 100px;" ng-model="s.unit"></input></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col">
+            <div class="btn-group">
+              <button type="button" class="btn btn-sm btn-primary mx-1" style="width: 80px;" ng-click="clkSave()">Simpan</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="message-box"></div>
+
+
+        <script>
+          mainApp.controller('wmCtrl', function($scope, $window, $q, $http) {
+            $scope.sensors = [];
+            $scope.action = "list";
+            $scope.ftab = "list";
+
+            $scope.deviceRowColor = function(device) {
+              if(device.enabled == 0) {
+                return "#f0d2d2";
+              } else if(device.is_expired) {
+                return "#f1e1b8";
+              } else {
+                return "#ffffff";
+              }
+            }
+
+            $scope.loadSensors = function() {
+              $http.get("/api/v1/sensors").then(
+                function(response){
+                  $scope.sensors = [];
+                  for(i = 0; i < 12; i++) {
+                    var slot = "" + (i + 1)
+                    $scope.sensors[i] = {
+                      slot:     "s" + (slot.length < 2 ? "0" : "") + slot, 
+                      code:     "", 
+                      name:     "", 
+                      unit:     "", 
+                      enabled:  false, 
+                    };
+                  }
+
+                  response.data.data.forEach(function(s) {
+                    var index = parseInt(s.slot.substr(1, 2)) - 1;
+                    $scope.sensors[index] = s;
+                  });
+                }, 
+                defaultErrorHandler
+              );
+            }
+
+            $scope.clkSave = function() {
+              $http.post("/api/v1/sensors", JSON.stringify($scope.sensors)).then(
+                function(response) {
+                  $scope.loadSensors();
+                }, 
+                defaultErrorHandler
+              );
+            }
+
+            $scope.loadSensors();
+          });
+        </script>
+<% end %>
