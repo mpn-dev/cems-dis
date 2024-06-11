@@ -24,7 +24,11 @@ func (s ApiService) GetRawDataById(c *gin.Context) rs.Response {
 	if record == nil {
 		return rs.Error(http.StatusNotFound, "Record ID not found")
 	}
-	return rs.Success(record.Out())
+	sensors, err := s.model.GetActiveSensors()
+	if err != nil {
+		return rs.Error(http.StatusInternalServerError, err.Error())
+	}
+	return rs.Success(record.Out(sensors))
 }
 
 func (s ApiService) GetLatestData(c *gin.Context) rs.Response {
@@ -32,13 +36,22 @@ func (s ApiService) GetLatestData(c *gin.Context) rs.Response {
 	if res.IsError() {
 		return res
 	}
+	sensors, err := s.model.GetActiveSensors()
+	if err != nil {
+		return rs.Error(http.StatusInternalServerError, err.Error())
+	}
   device := res.Data.(*model.Device)
 	rawData := &model.RawData{}
-	err := s.model.DB.Where("uid = ?", device.UID).Order("timestamp DESC").Limit(1).First(rawData).Error
+	err = s.model.DB.Where("uid = ?", device.UID).Order("timestamp DESC").Limit(1).First(rawData).Error
 	if err != nil {
-		rawData = nil
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return rs.Success(nil)
+		}
+
+		log.Warningf("DB error: %s", err.Error())
+		return rs.Error(http.StatusInternalServerError, "DB error")
 	}
-	return rs.Success(rawData)
+	return rs.Success(rawData.Out(sensors))
 }
 
 func (s ApiService) GetChartData(c *gin.Context) rs.Response {
@@ -73,8 +86,13 @@ func (s ApiService) ListRawData(c *gin.Context) rs.Response {
 		return rs.Error(http.StatusBadRequest, err.Error())
 	}
 
+	sensors, err := s.model.GetActiveSensors()
+	if err != nil {
+		return rs.Error(http.StatusInternalServerError, err.Error())
+	}
+
 	device := &model.Device{UID: uid}
-	err := s.model.DB.Model(&model.Device{}).Find(device).Error
+	err = s.model.DB.Model(&model.Device{}).Find(device).Error
 	if (err != nil) && errors.Is(err, gorm.ErrRecordNotFound) {
 		return rs.Error(http.StatusNotFound, "ID device tidak ada di database")
 	}
@@ -97,7 +115,7 @@ func (s ApiService) ListRawData(c *gin.Context) rs.Response {
 	}
 	list := []*model.RawDataOut{}
 	for _, r := range records {
-		list = append(list, r.Out())
+		list = append(list, r.Out(sensors))
 	}
 	return rs.Success(list).DefaultWithPaging(paging)
 }

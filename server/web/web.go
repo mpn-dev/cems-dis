@@ -12,6 +12,10 @@ func Ping(c *gin.Context) {
   c.Data(http.StatusOK, "text/plain", []byte("PONG"))
 }
 
+func Sensors(c *gin.Context) {
+	handlePageByMenu(c, "sensors", "sensors.html", nil)
+}
+
 func Devices(c *gin.Context) {
 	handlePageByMenu(c, "devices", "devices.html", nil)
 }
@@ -64,7 +68,7 @@ func webData(ctx *gin.Context, custom interface{}) gin.H {
 	data := gin.H{
 		"session_token":	authToken, 
 		"csrf_token": 		authToken, 
-		"app_title":			"CEMS Management", 
+		"app_title":			"CEMS DIS", 
 		"logo_left":			"/libs/logo/logo-mpn.png", 
 		"user_id":				userId, 
 		"user_name":			userName, 

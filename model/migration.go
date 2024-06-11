@@ -31,6 +31,10 @@ func (m migration) execSqlFile(file string) {
   m.db.Exec(string(b))
 }
 
+func (m migration) initSensors() {
+  m.createTable("sensors", &Sensor{})
+}
+
 func (m migration) initDevices() {
   m.createTable("devices", &Device{})
 }
@@ -56,6 +60,7 @@ func (m migration) initPushRequest() {
 }
 
 func (m migration) Run() {
+  m.initSensors()
   m.initDevices()
   m.initRelayStations()
   m.initDeviceTokens()

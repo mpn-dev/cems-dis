@@ -75,7 +75,7 @@
                 </tr>
                 <tr ng-repeat="r in tableData">
                   <td>{{epochToDate(r.timestamp)}}</td>
-                  <td style="text-align: center" ng-repeat="s in sensors">{{r[s.code]}}</td>
+                  <td style="text-align: center" ng-repeat="s in sensors">{{r.values[s.code]}}</td>
                 </tr>
               </table>
             
@@ -155,12 +155,11 @@
               "export": "Raw Data > Export Excel", 
             }
 
-            $scope.sensors = getSensors();
+            $scope.sensors = [];
             $scope.charts = [];
             $scope.device = {};
             $scope.devicePage = 1;
             $scope.selectedMode = "table";
-            $scope.preloadDeviceId = <% .preload_device_id %>;
 
             var record_date_start = $('#record-date-start').datepicker({uiLibrary: 'bootstrap4', size: 'small', format: 'yyyy-mm-dd'});
             var record_date_end = $('#record-date-end').datepicker({uiLibrary: 'bootstrap4', size: 'small', format: 'yyyy-mm-dd'});
@@ -202,6 +201,15 @@
               window.open(url, "_blank");
             }
 
+            $scope.loadSensors = function() {
+              $http.get("/api/v1/sensors?enabled").then(
+                function(response) {
+                  $scope.sensors = response.data.data;
+                }, 
+                defaultErrorHandler
+              );
+            }
+
             $scope.loadDevices = function() {
               var page = $scope.devicePage ? $scope.devicePage : 1;
               var keywords = $scope.searchKeywords ? $scope.searchKeywords : "";
@@ -221,7 +229,7 @@
 
               for(var i = 0; i < $scope.sensors.length; i++) {
                 var ss = $scope.sensors[i];
-                var ds = $scope.chartData.map(function(r) {return r[ss.code];}).reverse();
+                var ds = $scope.chartData.map(function(r) {return r.values[ss.code];}).reverse();
                 var cv = document.getElementById("chart-" + (i + 1));
                 cv.style.backgroundColor = "#ffffff";
 
@@ -371,17 +379,14 @@
               $scope.presentData();
             }
 
+            $scope.loadSensors();
             $scope.loadDevices();
 
             for(var i = 0; i < 20; i++) {
               $scope.charts.push(null);
             }
 
-            if($scope.preloadHwid) {
-              $scope.clkSelectDevice($scope.preloadDeviceId);
-            } else {
-              $scope.ftab = "pick";
-            }
+            $scope.ftab = "pick";
           });
         </script>
 <% end %>

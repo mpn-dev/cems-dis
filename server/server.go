@@ -42,6 +42,9 @@ func registerApiRoutes(engine *gin.Engine, model *model.Model) {
   }
 
   g := engine.Group("api/v1")
+  g.GET("/sensors", j(api.ApiService.ListSensors))
+  g.POST("/sensors", j(api.ApiService.UpdateSensor))
+
   g.GET("/devices", j(api.ApiService.ListDevices))
   g.POST("/devices", j(api.ApiService.InsertDevice))
   g.GET("/devices/new-secret", j(api.ApiService.GenerateDeviceSecret))
@@ -87,6 +90,7 @@ func registerApiRoutes(engine *gin.Engine, model *model.Model) {
 
 func registerWebRoutes(engine *gin.Engine, model *model.Model) {
   g := engine.Group("web")
+  g.GET("/sensors", web.Sensors)
   g.GET("/devices", web.Devices)
   g.GET("/relay-stations", web.RelayStations)
   g.GET("/raw-data", web.RawData)
@@ -114,6 +118,7 @@ func registerTemplates(engine *gin.Engine) {
     "push_requests.html":   []string{"views/content/push_requests.html", "views/layout/admin.html"}, 
     "relay_stations.html":  []string{"views/content/relay_stations.html", "views/layout/admin.html"}, 
     "devices.html":         []string{"views/content/devices.html", "views/layout/admin.html"}, 
+    "sensors.html":         []string{"views/content/sensors.html", "views/layout/admin.html"}, 
   }
 
   // todo: reload templates if env == development
