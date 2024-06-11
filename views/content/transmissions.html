@@ -86,9 +86,8 @@
               var keywords = $scope.searchKeywords ? $scope.searchKeywords : "";
               var timeRange = range != null ? "&ts1=" + range.start + "&ts2=" + range.end : ""
               var page = $scope.transmissionPage ? $scope.transmissionPage : 1;
-              var url = "/api/v1/transmissions?page=" + page + timeRange + "&q=" + keywords;
               $scope.isBusy = true;
-              $http.get(url, requestConfig()).then(
+              $http.get("/api/v1/transmissions?page=" + page + timeRange + "&q=" + keywords).then(
                 function(response) {
                   $scope.transmissionList     = response.data.data;
                   $scope.transmissionPage     = response.data.meta.pagination.page;

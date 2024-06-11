@@ -78,8 +78,8 @@ function defaultErrorHandler(resp) {
       if(typeof r.data === 'string' || r.data instanceof String) {
         errmsg = r.data;
       } else if("meta" in r.data) {
-        if("errors" in r.data.meta) {
-          errmsg = r.data.meta.errors[0];
+        if("message" in r.data.meta) {
+          errmsg = r.data.meta.message;
         }
       }
       window.alert("Error " + r.status + ": " + errmsg);

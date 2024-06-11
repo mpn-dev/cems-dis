@@ -111,7 +111,6 @@
               "edit": "Edit Device"
             }
 
-            $scope.is_root = true;
             $scope.sensors = [];
             $scope.templateNames = [];
             $scope.filterExpired = false;
@@ -144,7 +143,7 @@
                 params.push("disabled")
               }
 
-              $http.get("/api/v1/devices?" + params.join("&"), requestConfig()).then(
+              $http.get("/api/v1/devices?" + params.join("&")).then(
                 function(response){
                   $scope.deviceList     = response.data.data;
                   $scope.devicePage     = response.data.meta.pagination.page;
@@ -173,7 +172,7 @@
               $scope.lstKecamatan = [];
               $scope.lstDesa = [];
               if($scope.device.kd_provinsi != null) {
-                $http.get("/api/v1/kabupaten/lookup?provinsi=" + $scope.device.kd_provinsi, requestConfig()).then(
+                $http.get("/api/v1/kabupaten/lookup?provinsi=" + $scope.device.kd_provinsi).then(
                   function(response) {
                     $scope.lstKabupaten = response.data.data;
                   }, 
@@ -186,7 +185,7 @@
               $scope.lstKecamatan = [];
               $scope.lstDesa = [];
               if($scope.device.kd_kabupaten != null) {
-                $http.get("/api/v1/kecamatan/lookup?kabupaten=" + $scope.device.kd_kabupaten, requestConfig()).then(
+                $http.get("/api/v1/kecamatan/lookup?kabupaten=" + $scope.device.kd_kabupaten).then(
                   function(response) {
                     $scope.lstKecamatan = response.data.data;
                   }, 
@@ -198,7 +197,7 @@
             $scope.clkKecamatan = function() {
               $scope.lstDesa = [];
               if($scope.device.kd_kecamatan != null) {
-                $http.get("/api/v1/desa/lookup?kecamatan=" + $scope.device.kd_kecamatan, requestConfig()).then(
+                $http.get("/api/v1/desa/lookup?kecamatan=" + $scope.device.kd_kecamatan).then(
                   function(response) {
                     $scope.lstDesa = response.data.data;
                   }, 
@@ -208,7 +207,7 @@
             }
 
             $scope.clkGenerateSecret = function() {
-              $http.get("/api/v1/devices/new-secret", requestConfig()).then(
+              $http.get("/api/v1/devices/new-secret").then(
                 function(response) {
                   $scope.device.secret = response.data;
                 }
@@ -236,7 +235,7 @@
               $scope.lstKecamatan = [];
               $scope.lstDesa = [];
 
-              $http.get("/api/v1/devices/" + uid, requestConfig()).then(
+              $http.get("/api/v1/devices/" + uid).then(
                 function(response) {
                   $scope.device = response.data.data;
                   $scope.clkProvinsi();
@@ -252,7 +251,7 @@
             $scope.clkDelete = function(uid) {
               msgbox("message-box", "Hapus Device?", "UID: " + uid, {onclick: function(btn) {
                 if(btn == "OK") {
-                  $http.delete("/api/v1/devices/" + uid, requestConfig()).then(
+                  $http.delete("/api/v1/devices/" + uid).then(
                     function(response) {
                       $scope.loadDevices();
                     }, 
@@ -281,9 +280,9 @@
               };
 
               if($scope.action == "new") {
-                $http.post("/api/v1/devices", JSON.stringify(params), requestConfig()).then(onSuccess, defaultErrorHandler);
+                $http.post("/api/v1/devices", JSON.stringify(params)).then(onSuccess, defaultErrorHandler);
               } else {
-                $http.patch("/api/v1/devices/" + $scope.oldUid, JSON.stringify(params), requestConfig()).then(onSuccess, defaultErrorHandler);
+                $http.patch("/api/v1/devices/" + $scope.oldUid, JSON.stringify(params)).then(onSuccess, defaultErrorHandler);
               }
             }
             
