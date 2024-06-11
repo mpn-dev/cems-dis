@@ -86,9 +86,8 @@
               var keywords = $scope.searchKeywords ? $scope.searchKeywords : "";
               var timeRange = range != null ? "&ts1=" + range.start + "&ts2=" + range.end : ""
               var page = $scope.requestPage ? $scope.requestPage : 1;
-              var url = "/api/v1/push-requests?page=" + page + timeRange + "&q=" + keywords;
               $scope.isBusy = true;
-              $http.get(url, requestConfig()).then(
+              $http.get("/api/v1/push-requests?page=" + page + timeRange + "&q=" + keywords).then(
                 function(response) {
                   $scope.requestList = response.data.data;
                   $scope.cntShownReqs = $scope.requestList.length;

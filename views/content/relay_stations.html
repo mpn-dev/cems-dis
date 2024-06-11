@@ -109,7 +109,6 @@
               "edit": "Edit Relay Station"
             }
 
-            $scope.is_root = true;
             $scope.protocols = [];
             $scope.sensors = [];
             $scope.templateNames = [];
@@ -142,7 +141,7 @@
                 params.push("disabled")
               }
 
-              $http.get("/api/v1/relay-stations?" + params.join("&"), requestConfig()).then(
+              $http.get("/api/v1/relay-stations?" + params.join("&")).then(
                 function(response){
                   $scope.stationList      = response.data.data;
                   $scope.stationPage      = response.data.meta.pagination.page;
@@ -181,7 +180,7 @@
               $scope.oldStationId = id;
               $scope.station = {};
 
-              $http.get("/api/v1/relay-stations/" + id, requestConfig()).then(
+              $http.get("/api/v1/relay-stations/" + id).then(
                 function(response) {
                   $scope.station = response.data.data;
                   $scope.action = 'edit';
@@ -194,7 +193,7 @@
             $scope.clkDelete = function(id, name) {
               msgbox("message-box", "Hapus Relay Station?", "Nama: " + name, {onclick: function(btn) {
                 if(btn == "OK") {
-                  $http.delete("/api/v1/relay-stations/" + id, requestConfig()).then(
+                  $http.delete("/api/v1/relay-stations/" + id).then(
                     function(response) {
                       $scope.loadRelayStations();
                     }, 
@@ -222,9 +221,9 @@
               };
 
               if($scope.action == "new") {
-                $http.post("/api/v1/relay-stations", JSON.stringify(params), requestConfig()).then(onSuccess, defaultErrorHandler);
+                $http.post("/api/v1/relay-stations", JSON.stringify(params)).then(onSuccess, defaultErrorHandler);
               } else {
-                $http.patch("/api/v1/relay-stations/" + $scope.oldStationId, JSON.stringify(params), requestConfig()).then(onSuccess, defaultErrorHandler);
+                $http.patch("/api/v1/relay-stations/" + $scope.oldStationId, JSON.stringify(params)).then(onSuccess, defaultErrorHandler);
               }
             }
             
