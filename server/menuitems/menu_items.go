@@ -32,6 +32,7 @@ func allMenuItems() []menuItem {
     menuItem{}, 
     menuItem{name: "relay-stations",    text: "Daftar Relay Station",   path: "/web/relay-stations",    exts: ""}, 
     menuItem{name: "devices",           text: "Daftar Device",          path: "/web/devices",           exts: ""}, 
+    menuItem{name: "sensors",           text: "Daftar Sensor",          path: "/web/sensors",           exts: ""}, 
   }
 }
 

@@ -83,8 +83,8 @@
                 var infoTable = "  (Tidak ada data)";
 
                 if(sum) {
-                  infoTable = getSensors().map(function(s) {
-                    var val = sum[s.code];
+                  infoTable = $scope.sensors.map(function(s) {
+                    var val = sum.values[s.code];
                     var txt = 
                         '      <tr class="status-1">'
                       + '<td><strong>' + s.name + '</strong>'
@@ -218,6 +218,15 @@
           }
         }
 
+        $scope.loadSensors = function() {
+          $http.get("/api/v1/sensors?enabled").then(
+            function(response) {
+              $scope.sensors = response.data.data;
+            }, 
+            defaultErrorHandler
+          );
+        }
+
         $scope.loadDevices = function() {
           $http.get("/api/v1/devices").then(
             function(response) {
@@ -231,8 +240,10 @@
           );
         }
 
-        setInterval($scope.loadDevices, 60000);
+        $scope.loadSensors();
         $scope.loadDevices();
+
+        setInterval($scope.loadDevices, 60000);
       });
     </script>
 <% end %>
