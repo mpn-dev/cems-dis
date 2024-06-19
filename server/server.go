@@ -102,36 +102,25 @@ func registerWebRoutes(engine *gin.Engine, model *model.Model) {
 }
 
 func registerTemplates(engine *gin.Engine) {
-  render := NewCustomRender()
-  render.Debug = gin.IsDebugging()
-
-  funMap := template.FuncMap{
-    // "dropdownMenuItems": menuitem.DropdownMenuItems, 
+  funcMap := func(tpl *template.Template) *template.Template{
+    tpl = tpl.Funcs(template.FuncMap{
+      // "dropdownMenuItems": menuitem.DropdownMenuItems, 
+    })
+    tpl = tpl.Delims("<%", "%>")
+    return tpl
   }
+  render := NewCustomRender(funcMap, gin.IsDebugging())
 
-  tmplMap := map[string][]string{
-    "dashboard.html":       []string{"views/content/dashboard.html", "views/layout/map.html"}, 
-    "raw_data.html":        []string{"views/content/raw_data.html", "views/layout/admin.html"}, 
-    "emission_data.html":   []string{"views/content/emission_data.html", "views/layout/admin.html"}, 
-    "percentage_data.html": []string{"views/content/percentage_data.html", "views/layout/admin.html"}, 
-    "transmissions.html":   []string{"views/content/transmissions.html", "views/layout/admin.html"}, 
-    "push_requests.html":   []string{"views/content/push_requests.html", "views/layout/admin.html"}, 
-    "relay_stations.html":  []string{"views/content/relay_stations.html", "views/layout/admin.html"}, 
-    "devices.html":         []string{"views/content/devices.html", "views/layout/admin.html"}, 
-    "sensors.html":         []string{"views/content/sensors.html", "views/layout/admin.html"}, 
-  }
+  render.AddFromFiles("dashboard.html", "views/content/dashboard.html", "views/layout/map.html")
+  render.AddFromFiles("raw_data.html", "views/content/raw_data.html", "views/layout/admin.html")
+  render.AddFromFiles("emission_data.html", "views/content/emission_data.html", "views/layout/admin.html")
+  render.AddFromFiles("percentage_data.html", "views/content/percentage_data.html", "views/layout/admin.html")
+  render.AddFromFiles("transmissions.html", "views/content/transmissions.html", "views/layout/admin.html")
+  render.AddFromFiles("push_requests.html", "views/content/push_requests.html", "views/layout/admin.html")
+  render.AddFromFiles("relay_stations.html", "views/content/relay_stations.html", "views/layout/admin.html")
+  render.AddFromFiles("devices.html", "views/content/devices.html", "views/layout/admin.html")
+  render.AddFromFiles("sensors.html", "views/content/sensors.html", "views/layout/admin.html")
 
-  // todo: reload templates if env == development
-  for k, v := range tmplMap {
-    tpl := template.New(k).Funcs(funMap).Delims("<%", "%>")
-    tpl, err := tpl.ParseFiles(v...)
-    if err != nil {
-      panic(err)
-    }
-    render.Add(k, tpl)
-  }
-
-  // todo: panic when template loading failed
   engine.HTMLRender = render
 }
 
