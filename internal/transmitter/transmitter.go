@@ -84,8 +84,6 @@ func Start() {
 			protocol = NewPingProtocol(trx.model)
 		} else if task.Protocol == "CEMS-MPN" {
 			protocol = NewCemsMpnProtocol(trx.model)
-		// } else if task.Protocol == "CEMS-KLHK" {
-		// 	protocol = NewKlhkProtocol(trx.model)
 		}
 
 		if protocol == nil {
