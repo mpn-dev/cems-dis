@@ -23,7 +23,7 @@ func (s ApiService) ListDevices(c *gin.Context) rs.Response {
 	sql = model.SetSearchKeywords(sql, []string{"uid", "name", "api_key", "secret"}, c.Query("q"))
 
 	if _, ok := c.GetQuery("disabled"); ok {
-		sql.Where("(enabled = ?)", false)
+		sql = sql.Where("(enabled = ?)", false)
 	}
 
 	var paging *rs.Paging
@@ -38,7 +38,8 @@ func (s ApiService) ListDevices(c *gin.Context) rs.Response {
 
 	var devices []model.Device
 	if err := sql.Find(&devices).Error; err != nil {
-		return rs.Error(http.StatusInternalServerError, err.Error())
+		log.Warningf("Error in api.ListDevices: %s", err.Error())
+		return rs.Error(http.StatusInternalServerError, "DB error")
 	}
 
 	list := []*model.DeviceOut{}
@@ -69,7 +70,7 @@ func (s ApiService) InsertDevice(c *gin.Context) rs.Response {
 	}
 	err = s.model.DB.Create(device).Error
 	if err != nil {
-		log.Warningf("Error in InsertDevice: %s, device: %+v\n", err.Error(), device)
+		log.Warningf("Error in api.InsertDevice: %s, device: %+v\n", err.Error(), device)
 		return rs.Error(http.StatusInternalServerError, "Unknown error")
 	}
 	return rs.Success(device)
@@ -123,7 +124,7 @@ func (s ApiService) validateUidString(uid string) error {
 func (s ApiService) getDeviceUidFromUrl(c *gin.Context) (string, error) {
 	uid := strings.Trim(c.Param("uid"), " ")
 	if err := s.validateUidString(uid); err != nil {
-		return "", errors.New("UID tidak boleh kosong")
+		return "", err
 	}
 	return uid, nil
 }
@@ -157,9 +158,9 @@ func (s ApiService) extractDeviceData(c *gin.Context) (*model.Device, error) {
 	} else if len(device.Name) == 0 {
 		return nil, errors.New("Nama device wajib diisi")
 	} else if len(device.ApiKey) == 0 {
-		return nil, errors.New("Api key wajib diisi")
+		return nil, errors.New("API key wajib diisi")
 	} else if s.model.IsDeviceApiKeyTaken(device.ApiKey, oldUid) {
-		return nil, errors.New(fmt.Sprintf("Api key '%s' sudah digunakan", device.ApiKey))
+		return nil, errors.New(fmt.Sprintf("API key '%s' sudah digunakan", device.ApiKey))
 	} else if len(device.Secret) == 0 {
 		return nil, errors.New("Secret wajib diisi")
 	}
