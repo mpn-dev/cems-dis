@@ -131,7 +131,7 @@
             }
 
             $scope.loadDevices = function() {
-              var params = ["page=" + $scope.devicePage ? $scope.devicePage : 1];
+              var params = ["page=" + ($scope.devicePage ? $scope.devicePage : 1)];
 
               if($scope.searchKeywords) {
                 params.push("q=" + $scope.searchKeywords);
@@ -167,45 +167,6 @@
               $scope.loadDevices();
             }
 
-            $scope.clkProvinsi = function() {
-              $scope.lstKabupaten = [];
-              $scope.lstKecamatan = [];
-              $scope.lstDesa = [];
-              if($scope.device.kd_provinsi != null) {
-                $http.get("/api/v1/kabupaten/lookup?provinsi=" + $scope.device.kd_provinsi).then(
-                  function(response) {
-                    $scope.lstKabupaten = response.data.data;
-                  }, 
-                  defaultErrorHandler
-                );
-              }
-            }
-
-            $scope.clkKabupaten = function() {
-              $scope.lstKecamatan = [];
-              $scope.lstDesa = [];
-              if($scope.device.kd_kabupaten != null) {
-                $http.get("/api/v1/kecamatan/lookup?kabupaten=" + $scope.device.kd_kabupaten).then(
-                  function(response) {
-                    $scope.lstKecamatan = response.data.data;
-                  }, 
-                  defaultErrorHandler
-                );
-              }
-            }
-
-            $scope.clkKecamatan = function() {
-              $scope.lstDesa = [];
-              if($scope.device.kd_kecamatan != null) {
-                $http.get("/api/v1/desa/lookup?kecamatan=" + $scope.device.kd_kecamatan).then(
-                  function(response) {
-                    $scope.lstDesa = response.data.data;
-                  }, 
-                  defaultErrorHandler
-                );
-              }
-            }
-
             $scope.clkGenerateSecret = function() {
               $http.get("/api/v1/devices/new-secret").then(
                 function(response) {
@@ -238,9 +199,6 @@
               $http.get("/api/v1/devices/" + uid).then(
                 function(response) {
                   $scope.device = response.data.data;
-                  $scope.clkProvinsi();
-                  $scope.clkKabupaten();
-                  $scope.clkKecamatan();
                   $scope.action = 'edit';
                   $scope.ftab = 'edit';
                 }, 

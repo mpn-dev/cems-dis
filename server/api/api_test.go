@@ -4,6 +4,7 @@ import (
 	"testing"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/gin-gonic/gin"
@@ -13,7 +14,6 @@ import (
 
 	"cems-dis/model"
 )
-
 
 type ApiHandlerTestSuite struct {
 	suite.Suite
@@ -41,6 +41,7 @@ func (s *ApiHandlerTestSuite) setupSqlMock() {
 	s.ctx, _ = gin.CreateTestContext(s.rec)
 	s.ctx.Request = &http.Request{
 		Header: make(http.Header),
+		URL:		&url.URL{}, 
 	}
 }
 
@@ -48,10 +49,10 @@ func (s *ApiHandlerTestSuite) SetupSuite() {
 }
 
 func (s *ApiHandlerTestSuite) SetupTest() {
-	s.setupSqlMock()
 }
 
 func (s *ApiHandlerTestSuite) SetupSubTest() {
+	s.setupSqlMock()
 }
 
 func TestHandler(t *testing.T) {
